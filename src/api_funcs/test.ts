@@ -9,6 +9,9 @@ const send = async (req: any, data: any) => {
 
   let users = await Users.find({})
 
+  console.log(1);
+  
+
   return {
     test: "test",
     users

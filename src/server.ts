@@ -24,6 +24,9 @@ if(process.argv.indexOf("--multi") !== -1) {
   global.WORKER_COUNT = 1
 }
 
+// url для подключения к базе
+global.DB_URL = `mongodb://localhost:27017/${DB_NAME}`
+
 // app
 global.APP = express()
 

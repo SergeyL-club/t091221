@@ -6,6 +6,7 @@ import bodyParser from 'body-parser'
 import os from 'os'
 import expressFormData from 'express-form-data'
 import path from 'path/posix'
+import { connect } from 'mongoose'
 
 // logger worker
 const logWork = ( data: any, req: any, input: boolean ) => {
@@ -15,6 +16,10 @@ const logWork = ( data: any, req: any, input: boolean ) => {
     logger.info({ pid: process.pid+", "+cluster.worker?.id, data: data }, `Response ${req.method} ${req.params.module}/${req.params.action}`)
   }
 }
+
+// connect db mongo 
+if(cluster.isMaster) require("./connectionMongoDB")
+
 
 // json parser
 const jsonParser = bodyParser.json()
@@ -95,9 +100,6 @@ APP.get('/', (req, res) => res.send('Cluster mode.'));
 
 if ( cluster.isMaster ) {
 
-  // connect db mongo
-  if( cluster.isMaster ) require("./connectionMongoDB")
-
   // запуск работников
   for ( let i = 0; i < WORKER_COUNT; i++ ) cluster.fork()
 
@@ -106,7 +108,11 @@ if ( cluster.isMaster ) {
     const newWorker = cluster.fork()
   })
 
-} else // настройка рабочего
+} 
+// настройка рабочего
+else {
   APP.listen(PORT, () =>
     logger.info(`Worker ${cluster.worker?.id} launched, pid: ${process.pid}, port: ${PORT}`)
   );
+  connect(DB_URL)
+}

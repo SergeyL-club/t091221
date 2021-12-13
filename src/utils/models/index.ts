@@ -1,2 +1,2 @@
-exports.Roles = require("./Role")
-exports.Users = require("./User")
+exports.roles = require("./Role")
+exports.users = require("./User")

@@ -1,7 +1,7 @@
 import { createConnection } from 'mongoose'
 import { logger } from './logger'
 
-const conn = createConnection(`mongodb://localhost:27017/${DB_NAME}`, {
+const conn = createConnection(`${DB_URL}`, {
   autoIndex: true,
   autoCreate: true
 })

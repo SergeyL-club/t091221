@@ -22,4 +22,4 @@ const NewSchema = new Schema<RoleType, RoleModel, RoleType>({
 })
 
 // экспорт самой модели
-export const Roles: RoleModel = <RoleModel>model("Roles", NewSchema)
+export const Roles: RoleModel = <RoleModel>model("roles", NewSchema)

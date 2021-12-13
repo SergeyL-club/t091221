@@ -26,8 +26,8 @@ interface UserModel extends Model<UserType>{
 const NewSchema = new Schema<UserType, UserModel, UserType>({
   login: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: ObjectId, required: true, ref: "Roles" }
+  role: { type: ObjectId, required: true, ref: "roles" }
 })
 
 // экспорт самой модели
-export const Users: UserModel = <UserModel>model("Users", NewSchema)
+export const Users: UserModel = <UserModel>model("users", NewSchema)

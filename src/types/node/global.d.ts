@@ -6,6 +6,7 @@ declare global {
   var WORKER_COUNT: number
   var APP: Express
   var DB_NAME: string
+  var DB_URL: string
 }
 
 declare global {
