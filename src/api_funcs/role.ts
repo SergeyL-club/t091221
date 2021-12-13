@@ -1,4 +1,5 @@
 import { ApiError } from "../utils/apiError"
+import { Roles } from "../utils/models/Role"
 import { IAccount } from "./interfaces"
 
 interface inputSetRole {
@@ -15,7 +16,15 @@ const setRole = async(account: IAccount, data: inputSetRole | undefined ) => {
     throw new ApiError(403, `Can't access this request`) 
   }
 
-  return { account }
+  let newRoleDoc = new Roles({
+    name: data.name
+  }) 
+
+  newRoleDoc.save()
+
+  return { 
+    newRole: newRoleDoc
+  }
 }
 
 module.exports = {
