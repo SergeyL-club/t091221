@@ -1,4 +1,5 @@
 import {model, Schema, Model, Document } from 'mongoose';
+import { EModels } from './enumModels';
 
 // интерфейс user
 export interface IRole {
@@ -22,4 +23,4 @@ const NewSchema = new Schema<RoleType, RoleModel, RoleType>({
 })
 
 // экспорт самой модели
-export const Roles: RoleModel = <RoleModel>model("roles", NewSchema)
+export const Roles: RoleModel = <RoleModel>model(EModels.roles, NewSchema)

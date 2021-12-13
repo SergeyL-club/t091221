@@ -7,6 +7,12 @@ import os from 'os'
 import expressFormData from 'express-form-data'
 import path from 'path/posix'
 import { connect } from 'mongoose'
+import { verify } from './verifyToken'
+
+// проверка на пустой obj
+function isEmpty(obj: Object) {
+  return Object.keys(obj).length === 0;
+}
 
 // logger worker
 const logWork = ( data: any, req: any, input: boolean ) => {
@@ -45,7 +51,12 @@ const modules = require(path.join(GLOBAL_DIR, "api_funcs"))
 APP.use("/:module/:action", async ( req, res, next ) => {
 
   if ( cluster.isWorker ) {
-    let data = (req.method === "GET") ? req.query : (req.method === "POST") ? req.body : null
+    let data = (req.method === "GET") ? req.query : (req.method === "POST") ? req.body : undefined
+    
+    // проверка на пустой объект
+    if(isEmpty(data)) data = undefined
+    
+    // логирование
     logWork(data, req, true)
 
     let moduleName = req.params.module
@@ -55,8 +66,10 @@ APP.use("/:module/:action", async ( req, res, next ) => {
       let func = modules[moduleName][actionName]
       try {
 
+        let account = await verify(req)
+
         // результат выполнения запроса
-        let result = await func(req, data)
+        let result = await func(account, data)
 
         // логирование
         logWork(result, req, false)
@@ -107,6 +120,8 @@ if ( cluster.isMaster ) {
   cluster.on('exit', (worker, code) => {    
     const newWorker = cluster.fork()
   })
+
+
 
 } 
 // настройка рабочего
