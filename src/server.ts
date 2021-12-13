@@ -15,8 +15,14 @@ global.PORT = (Number(process.env.PORT)) ? Number(process.env.PORT) : 4000
 global.GLOBAL_DIR = __dirname
 global.DB_NAME = (process.env.DB_NAME) ? process.env.DB_NAME : "ApiDefaultDB"
 
-// количество процессов (половина от общих)
-global.WORKER_COUNT = cpus().length / 2
+// проверка на несколько потоков (если вкл мод, то половина потоков процессора, иначе или --- --cp настраивается или просто 1 (без --cp))
+if(process.argv.indexOf("--multi") !== -1) {
+  global.WORKER_COUNT = cpus().length / 2
+} else if(process.argv.indexOf("--cp") !== -1) {
+  global.WORKER_COUNT = Number(process.argv[process.argv.indexOf("--cp")+1])
+} else {
+  global.WORKER_COUNT = 1
+}
 
 // app
 global.APP = express()

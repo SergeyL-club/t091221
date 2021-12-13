@@ -5,7 +5,9 @@
   "main": "./src/server.ts",
   "scripts": {
     "dev": "ts-node-dev --cls --files --respawn ./src/server.ts",
+    "dev-cp": "ts-node-dev --cls --files --respawn ./src/server.ts -- --cp",
     "start": "ts-node-dev --cls --files ./src/server.ts --multi",
+    "start-cp": "ts-node-dev --cls --files ./src/server.ts -- --cp",
     "dev-multi": "ts-node-dev --cls --files --respawn ./src/server.ts --multi"
   },
   "keywords": [],

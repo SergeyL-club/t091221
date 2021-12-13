@@ -95,11 +95,6 @@ APP.get('/', (req, res) => res.send('Cluster mode.'));
 
 if ( cluster.isMaster ) {
 
-  // проверка на несколько потоков (если вкл мод, то половина потоков процессора)
-  if(process.argv.indexOf("--multi") === -1) {
-    WORKER_COUNT = 1
-  }
-
   // connect db mongo
   if( cluster.isMaster ) require("./connectionMongoDB")
 
