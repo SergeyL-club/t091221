@@ -23,4 +23,4 @@ const NewSchema = new Schema<TTService, ServiceModel, TTService>({
 })
 
 // экспорт самой модели
-export const typeServices: ServiceModel = <ServiceModel>model(EModels.typeServices, NewSchema)
+export const TypeServices: ServiceModel = <ServiceModel>model(EModels.typeServices, NewSchema)

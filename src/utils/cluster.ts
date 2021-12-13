@@ -62,8 +62,9 @@ APP.use("/:module/:action", async ( req, res, next ) => {
     let moduleName = req.params.module
     let actionName = req.params.action
 
-    if( modules[moduleName][actionName] ) {
+    if( modules[moduleName] && modules[moduleName][actionName] ) {
       let func = modules[moduleName][actionName]
+      
       try {
 
         let account = await verify(req)
@@ -93,14 +94,23 @@ APP.use("/:module/:action", async ( req, res, next ) => {
           let errorJson = e.getJson();
 
           // возвращение ответа
-          return res.status(errorJson.code).json(errorJson).end();
+          return res.status(errorJson.code).json(errorJson).end()
         
         }
         
         // если не json ошибка
-        return res.end(e.toString());
+        return res.end(e.toString())
       
       }
+    } else {
+      logger.error({ pid: process.pid+", "+cluster.worker?.id },`No api url /${moduleName}/${actionName}`)
+      return res.status(404).json(
+          {
+            type: "error",
+            code: 404,
+            message: "Api function undefined"     
+          }
+        ).end()
     }
   }
 
@@ -117,7 +127,11 @@ if ( cluster.isMaster ) {
   for ( let i = 0; i < WORKER_COUNT; i++ ) cluster.fork()
 
   // метод регенерации работников
+  cluster.on("disconnect", () => {
+    const newWorker = cluster.fork()
+  })
   cluster.on('exit', (worker, code) => {    
+    logger.info(`exit worker`)
     const newWorker = cluster.fork()
   })
 

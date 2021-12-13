@@ -6,20 +6,26 @@ interface inputSetRole {
   name: string
 }
 
-const setRole = async(account: IAccount, data: inputSetRole | undefined ) => {
+const setRole = async( account: IAccount, data: inputSetRole | undefined ) => {
 
+  // проверки  
+  if(account.role.name !== "admin") {
+    throw new ApiError(403, `Can't access this request`) 
+  }
   if(!data) {
     throw new ApiError(400, `Not enough input`)
   }
 
-  if(account.role.name !== "admin") {
-    throw new ApiError(403, `Can't access this request`) 
+  if(await Roles.findOne({ name: data.name })) {
+    throw new ApiError(409, `This name is taken`)
   }
 
+  // создание роли
   let newRoleDoc = new Roles({
     name: data.name
   }) 
 
+  // сохранение в БД
   newRoleDoc.save()
 
   return { 
