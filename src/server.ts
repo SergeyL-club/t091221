@@ -1,19 +1,25 @@
 import { cpus } from 'os'
-import { resolve } from 'path'
 import express from 'express'
 import { logger } from './utils/logger'
 import cluster from 'cluster'
+import { config } from 'dotenv'
+import { resolve } from 'path/posix'
+
+// env
+config({
+  path: resolve(__dirname, "../.env")
+})
 
 // установка стандартных глобальных переменных
-global.PORT = 4000
-global.API_FUNC_ADR = __dirname
-global.db_name = "ApiDefault"
+global.PORT = (Number(process.env.PORT)) ? Number(process.env.PORT) : 4000
+global.GLOBAL_DIR = __dirname
+global.DB_NAME = (process.env.DB_NAME) ? process.env.DB_NAME : "ApiDefaultDB"
 
 // количество процессов (половина от общих)
-global.worker_count = cpus().length / 2
+global.WORKER_COUNT = cpus().length / 2
 
 // app
-global.app = express()
+global.APP = express()
 
 // логирование
 if( cluster.isMaster ) logger.info(`Created app global`)

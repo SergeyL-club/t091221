@@ -1,7 +1,7 @@
 import { connect } from 'mongoose'
 import { logger } from './logger'
 
-connect(`mongodb://localhost:27017/${global.db_name}`, (e) =>{
+connect(`mongodb://localhost:27017/${global.DB_NAME}`, (e) =>{
   if(e) throw e
-  else logger.info(`Connection mongoDB ${global.db_name}`)
+  else logger.info(`Connection mongoDB ${global.DB_NAME}`)
 })

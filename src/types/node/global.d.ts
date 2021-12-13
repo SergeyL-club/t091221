@@ -2,10 +2,19 @@ import { Express } from 'express'
 
 declare global {
   var PORT: number
-  var API_FUNC_ADR: string
-  var worker_count: number
-  var app: Express
-  var db_name: string
+  var GLOBAL_DIR: string
+  var WORKER_COUNT: number
+  var APP: Express
+  var DB_NAME: string
+}
+
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      PORT?: string;
+      DB_NAME?: string;
+    }
+  }
 }
 
 export {}

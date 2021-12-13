@@ -19,25 +19,25 @@ const logWork = ( data: any, req: any, input: boolean ) => {
 // json parser
 const jsonParser = bodyParser.json()
 const urlencodedParser = bodyParser.urlencoded({ extended: false }) 
-app.use(urlencodedParser)
-app.use(jsonParser)
+APP.use(urlencodedParser)
+APP.use(jsonParser)
 
 // form data
-app.use(expressFormData.parse(
+APP.use(expressFormData.parse(
   {
     uploadDir: os.tmpdir(),
     autoClean: true
   }
 ))
 
-app.use(expressFormData.format())
-app.use(expressFormData.stream())
-app.use(expressFormData.union())
+APP.use(expressFormData.format())
+APP.use(expressFormData.stream())
+APP.use(expressFormData.union())
 
-const modules = require(path.join(API_FUNC_ADR, "api_funcs")) 
+const modules = require(path.join(GLOBAL_DIR, "api_funcs")) 
 
 // загрузка api в express
-app.use("/:module/:action", async ( req, res, next ) => {
+APP.use("/:module/:action", async ( req, res, next ) => {
 
   if ( cluster.isWorker ) {
     let data = (req.method === "GET") ? req.query : (req.method === "POST") ? req.body : null
@@ -91,20 +91,20 @@ app.use("/:module/:action", async ( req, res, next ) => {
 })
 
 // main get
-app.get('/', (req, res) => res.send('Cluster mode.'));
+APP.get('/', (req, res) => res.send('Cluster mode.'));
 
 if ( cluster.isMaster ) {
 
   // проверка на несколько потоков (если вкл мод, то половина потоков процессора)
   if(process.argv.indexOf("--multi") === -1) {
-    worker_count = 1
+    WORKER_COUNT = 1
   }
 
   // connect db mongo
   if( cluster.isMaster ) require("./connectionMongoDB")
 
   // запуск работников
-  for ( let i = 0; i < worker_count; i++ ) cluster.fork()
+  for ( let i = 0; i < WORKER_COUNT; i++ ) cluster.fork()
 
   // метод регенерации работников
   cluster.on('exit', (worker, code) => {    
@@ -112,6 +112,6 @@ if ( cluster.isMaster ) {
   })
 
 } else // настройка рабочего
-  app.listen(PORT, () =>
+  APP.listen(PORT, () =>
     logger.info(`Worker ${cluster.worker?.id} launched, pid: ${process.pid}, port: ${PORT}`)
   );
