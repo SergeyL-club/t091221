@@ -1,7 +1,7 @@
 import {model, Schema, Model, Document } from 'mongoose';
 import { EModels } from './enumModels';
 
-// интерфейс user
+// интерфейс role
 export interface IRole {
   name: string
 }

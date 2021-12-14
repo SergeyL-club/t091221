@@ -3,3 +3,4 @@ exports.user = require("./user")
 exports.noVerify = {
   role: ["test"]
 }
+exports.typeService = require("./typeService")
