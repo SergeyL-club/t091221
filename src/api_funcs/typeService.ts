@@ -1,7 +1,7 @@
-import { ApiError } from "../utils/apiError";
-import { logger } from "../utils/logger";
-import { TypeServices } from "../utils/models/TypeService";
-import { IAccount } from "./interfaces";
+import { ApiError } from "../utils/apiError"
+import { logger } from "../utils/logger"
+import { TypeServices } from "../utils/models/TypeService"
+import { IAccount } from "./interfaces"
 
 // интерфейс input регистрации типа сервиса
 interface inputSetTypeService {

@@ -2,5 +2,6 @@ export enum EModels {
   users = "users",
   roles = "roles",
   services = "services",
-  typeServices = "typeservices"
+  typeServices = "typeservices",
+  prices = "prices"
 }

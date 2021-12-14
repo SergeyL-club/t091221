@@ -5,6 +5,9 @@ import { EModels } from './enumModels';
 export interface IService {
   name: string
   type: Schema.Types.ObjectId
+  prices: Array<Schema.Types.ObjectId>
+  images: Array<string>
+  executors: Array<Schema.Types.ObjectId>
 }
 
 
@@ -21,7 +24,10 @@ interface ServiceModel extends Model<ServiceType>{
 // схема
 const NewSchema = new Schema<ServiceType, ServiceModel, ServiceType>({
   name: { type: String, required: true, unique: true },
-  type: { type: Schema.Types.ObjectId, required: true, ref: EModels.typeServices }
+  type: { type: Schema.Types.ObjectId, required: true, ref: EModels.typeServices },
+  prices: [ { type: Schema.Types.ObjectId, ref: EModels.prices } ],
+  images: [ { type: String } ],
+  executors: [ { type: Schema.Types.ObjectId } ]
 })
 
 // экспорт самой модели
