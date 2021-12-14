@@ -30,6 +30,13 @@ global.DB_URL = `mongodb://localhost:27017/${DB_NAME}`
 // app
 global.APP = express()
 
+// secret key env
+if(process.env.SECRET_KEY) {
+  global.SECRET_KEY = process.env.SECRET_KEY
+} else {
+  throw new Error("No env secret key!!!")
+}
+
 // логирование
 if( cluster.isMaster ) logger.info(`Created app global`)
 

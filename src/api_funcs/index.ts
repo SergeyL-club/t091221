@@ -1,6 +1,6 @@
 exports.role = require("./role")
 exports.user = require("./user")
 exports.noVerify = {
-  role: ["test"]
+  user: ["registration", "authorization"]
 }
 exports.typeService = require("./typeService")

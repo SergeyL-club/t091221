@@ -7,13 +7,15 @@ declare global {
   var APP: Express
   var DB_NAME: string
   var DB_URL: string
+  var SECRET_KEY: string
 }
 
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      PORT?: string;
-      DB_NAME?: string;
+      PORT?: string
+      DB_NAME?: string
+      SECRET_KEY?: string
     }
   }
 }

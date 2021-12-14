@@ -69,7 +69,12 @@ APP.use("/:module/:action", async ( req, res, next ) => {
 
         let account
         
-        if(modules["noVerify"][moduleName].indexOf(actionName) === -1) {
+        // проверка на verify token если не в списке не verify (index api_funcs)
+        if( modules["noVerify"][moduleName] ) {
+          if( modules["noVerify"][moduleName].indexOf(actionName) === -1 ) {
+            account = await verify(req)
+          }
+        } else if(!( modules["noVerify"][moduleName] )) {
           account = await verify(req)
         }
 

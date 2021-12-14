@@ -10,7 +10,13 @@ export interface IUser {
   login: string
   password: string
   role: ObjectId
-  tokens: Array<String>
+  FIO: {
+    firstName: string
+    middleName: string
+    lastName: string
+  }
+  mail: string
+  tel: string
 }
 
 
@@ -29,7 +35,13 @@ const NewSchema = new Schema<UserType, UserModel, UserType>({
   login: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: ObjectId, required: true, ref: EModels.roles },
-  tokens: [ { type: String } ]
+  FIO: {
+    firstName: { type: String, require: true },
+    middleName: { type: String, require: true },
+    lastName: { type: String, require: true },
+  },
+  mail: { type: String,  require: true },
+  tel: { type: String, require: true }
 })
 
 // экспорт самой модели
