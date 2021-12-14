@@ -66,7 +66,11 @@ APP.use("/:module/:action", async ( req, res, next ) => {
       let func = modules[moduleName][actionName]
       try {
 
-        let account = await verify(req)
+        let account
+        
+        if(modules["noVerify"][moduleName].indexOf(actionName) === -1) {
+          account = await verify(req)
+        }
 
         // результат выполнения запроса
         let result = await func(account, data)

@@ -18,6 +18,11 @@ const setRole = async(account: IAccount, data: inputSetRole | undefined ) => {
   return { account }
 }
 
+const test = async(account: IAccount | undefined, data: inputSetRole | undefined ) => {
+  return { account }
+}
+
 module.exports = {
-  setRole
+  setRole,
+  test
 }
