@@ -5,6 +5,7 @@ import { generateToken } from "../utils/verifyToken"
 import { hashSync, compareSync } from 'bcrypt'
 import { logger } from "../utils/logger"
 
+// интерфейс input регистрации
 interface inputRegistration{
   login: string
   password: string
@@ -15,13 +16,15 @@ interface inputRegistration{
   tel: string
 }
 
+// функция проверки всех параметров input
 const instanceOfIR = (object: any): object is inputRegistration => {
   return "login" in object && "password" in object 
     && "firstName" in object && "middleName" in object 
     && "lastName" in object && "mail" in object &&
     "tel" in object
- } 
+} 
 
+// api регистрации
 const registration = async (account: undefined, data: inputRegistration ) => {
   
   // проверка
@@ -37,9 +40,10 @@ const registration = async (account: undefined, data: inputRegistration ) => {
     throw new ApiError(400, `No default role`)
   }
 
+  // создание hash пароля
   let hashPassword = hashSync(data.password, 7)
 
-  // create and save user
+  // создание и сохранение пользователя
   let newUser = await Users.create({
     login: data.login,
     password: hashPassword,
@@ -52,10 +56,12 @@ const registration = async (account: undefined, data: inputRegistration ) => {
     mail: data.mail,
     tel: data.tel
   }).catch(e => {
+    // если произошла ошибка
     if(e.code === 11000) throw new ApiError(409, `Duplicate nickname`)
     else logger.error(e)
   })
 
+  // проверка пользователя
   if(newUser) {
     let token = generateToken(newUser._id)
   
@@ -67,14 +73,18 @@ const registration = async (account: undefined, data: inputRegistration ) => {
   }
 }
 
+// интерфейс input авторизации
 interface inputAuthorization {
   login: string
   password: string
 }
+
+// функция проверки всех параметров input
 const instanceOfIA = (object: any): object is inputAuthorization => {
   return "login" in object && "password" in object 
- } 
+} 
 
+// api авторизации
 const authorization = async ( account: undefined, data: inputAuthorization | undefined ) => {
 
   // проверка
@@ -82,12 +92,14 @@ const authorization = async ( account: undefined, data: inputAuthorization | und
     throw new ApiError(400, `Not enough input`)
   }
 
+  // поиск пользователя
   let user = await Users.findOne({ login: data.login })
 
   if(!user) {
     throw new ApiError(403, `Login failed`)
   }
 
+  // проверка пороля
   if(compareSync(data.password, user.password)) {
     let token = generateToken(user._id)
   
@@ -99,6 +111,7 @@ const authorization = async ( account: undefined, data: inputAuthorization | und
   }
 }
 
+// экспорт api функций
 module.exports = {
   registration,
   authorization
