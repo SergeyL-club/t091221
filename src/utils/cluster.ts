@@ -112,6 +112,8 @@ APP.use("/:module/:action", async ( req, res, next ) => {
       
       }
     } else {
+      
+      // вывод ошибки "не найден api"
       logger.error({ pid: process.pid+", "+cluster.worker?.id },`No api url /${moduleName}/${actionName}`)
       return res.status(404).json(
           {
@@ -135,6 +137,18 @@ if ( cluster.isMaster ) {
   // запуск работников
   for ( let i = 0; i < WORKER_COUNT; i++ ) cluster.fork()
 
+  
+  
+  
+} 
+// настройка рабочего
+else {
+
+  // прослушивание по порту
+  APP.listen(PORT, () =>
+  logger.info(`Worker ${cluster.worker?.id} launched, pid: ${process.pid}, port: ${PORT}`)
+  );
+
   // метод регенерации работников
   cluster.on("disconnect", () => {
     const newWorker = cluster.fork()
@@ -144,13 +158,6 @@ if ( cluster.isMaster ) {
     const newWorker = cluster.fork()
   })
 
-
-
-} 
-// настройка рабочего
-else {
-  APP.listen(PORT, () =>
-    logger.info(`Worker ${cluster.worker?.id} launched, pid: ${process.pid}, port: ${PORT}`)
-  );
+  // подключение к mongo DB
   connect(DB_URL)
 }
