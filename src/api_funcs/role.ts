@@ -8,7 +8,6 @@ interface inputSetRole {
   name: string
   isAdminFun?: boolean
   isClientFun?: boolean
-  isExecutorFun?: boolean
 }
 
 // функция проверки всех параметров input
@@ -34,8 +33,7 @@ const setRole = async( account: IAccount, data: inputSetRole | undefined ) => {
   let newRoleDoc = await Roles.create({
     name: data.name,
     isAdminFun: (data.isAdminFun) ? data.isAdminFun : false,
-    isClientFun: (data.isClientFun) ? data.isClientFun : false,
-    isExecutorFun: (data.isExecutorFun) ? data.isExecutorFun : false
+    isClientFun: (data.isClientFun) ? data.isClientFun : false
   }).catch(e => {
     // если произошла ошибка
     if(e.code === 11000) throw new ApiError(409, `Duplicate name`)
