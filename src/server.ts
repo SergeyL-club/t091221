@@ -38,8 +38,8 @@ if(process.env.SECRET_KEY) {
 }
 
 // логирование
-if( cluster.isMaster ) logger.info(`Created app global`)
+if( cluster.isPrimary ) logger.info(`Created app global`)
 
 // запуск сервера
-if( cluster.isMaster ) logger.info(`Run cluster`)
+if( cluster.isPrimary ) logger.info(`Run cluster`)
 require("./utils/cluster")

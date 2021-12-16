@@ -24,7 +24,7 @@ const logWork = ( data: any, req: any, input: boolean ) => {
 }
 
 // connect db mongo 
-if(cluster.isMaster) require("./connectionMongoDB")
+if(cluster.isPrimary) require("./connectionMongoDB")
 
 
 // json parser
@@ -132,18 +132,15 @@ APP.use("/:module/:action", async ( req, res, next ) => {
 // main get
 APP.get('/', (req, res) => res.send('Cluster mode.'));
 
-if ( cluster.isMaster ) {
+if ( cluster.isPrimary ) {
 
   // запуск работников
   for ( let i = 0; i < WORKER_COUNT; i++ ) cluster.fork()
 
   
-  
-  
 } 
 // настройка рабочего
 else {
-
   // прослушивание по порту
   APP.listen(PORT, () =>
   logger.info(`Worker ${cluster.worker?.id} launched, pid: ${process.pid}, port: ${PORT}`)
