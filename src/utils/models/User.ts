@@ -7,7 +7,7 @@ const ObjectId = Schema.Types.ObjectId
 
 // интерфейс user
 export interface IUser {
-  login: string
+  nickname: string
   passwordHash: string
   role: ObjectId
   FIO: {
@@ -31,7 +31,7 @@ interface UserModel extends Model<UserType>{
 
 // схема
 const NewSchema = new Schema<UserType, UserModel, UserType>({
-  login: { type: String, required: true, unique: true },
+  nickname: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true },
   role: { type: ObjectId, required: true, ref: EModels.roles },
   FIO: {

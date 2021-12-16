@@ -1,7 +1,7 @@
 import { IRole } from '../utils/models/Role'
 
 export interface IAccount {
-  login: string
+  nickname: string
   role: IRole
   FIO: {
     firstName: string

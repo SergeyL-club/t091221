@@ -7,7 +7,7 @@ import { logger } from "../utils/logger"
 
 // интерфейс input регистрации
 interface inputRegistration{
-  login: string
+  nickname: string
   passwordHash: string
   firstName: string
   middleName: string
@@ -17,7 +17,7 @@ interface inputRegistration{
 
 // функция проверки всех параметров input
 const instanceOfIR = (object: any): object is inputRegistration => {
-  return "login" in object && "passwordHash" in object 
+  return "nickname" in object && "passwordHash" in object 
     && "firstName" in object && "middleName" in object 
     && "lastName" in object && "mail" in object 
 } 
@@ -43,7 +43,7 @@ const registration = async (account: undefined, data: inputRegistration ) => {
 
   // создание и сохранение пользователя
   let newUser = await Users.create({
-    login: data.login,
+    nickname: data.nickname,
     password: hashPassword,
     role: defRole._id,
     FIO: {
@@ -72,13 +72,13 @@ const registration = async (account: undefined, data: inputRegistration ) => {
 
 // интерфейс input авторизации
 interface inputAuthorization {
-  login: string
+  nickname: string
   passwordHash: string
 }
 
 // функция проверки всех параметров input
 const instanceOfIA = (object: any): object is inputAuthorization => {
-  return "login" in object && "passwordHash" in object 
+  return "nickname" in object && "passwordHash" in object 
 } 
 
 // api авторизации
@@ -90,10 +90,10 @@ const authorization = async ( account: undefined, data: inputAuthorization | und
   }
 
   // поиск пользователя
-  let user = await Users.findOne({ login: data.login })
+  let user = await Users.findOne({ nickname: data.nickname })
 
   if(!user) {
-    throw new ApiError(403, `Login failed`)
+    throw new ApiError(403, `nickname failed`)
   }
 
   // проверка пороля
@@ -104,7 +104,7 @@ const authorization = async ( account: undefined, data: inputAuthorization | und
       token
     }
   } else {
-    throw new ApiError(403, `Login failed`)
+    throw new ApiError(403, `nickname failed`)
   }
 }
 
@@ -138,7 +138,7 @@ const registrationByCode = async ( account: undefined, data: inputRegistrationBy
 
   // создание и сохранение пользователя
   let newUser = await Users.create({
-    login: data.login,
+    nickname: data.nickname,
     password: hashPassword,
     role: role._id,
     FIO: {
