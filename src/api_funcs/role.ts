@@ -50,8 +50,27 @@ const setRole = async( account: IAccount, data: inputSetRole | undefined ) => {
   }
 }
 
+const getAllRole = async( account: IAccount, data: undefined ) => {
+  if(!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`) 
+  }
+
+  let roles = await Roles.aggregate([
+    {
+      $match: {}
+    },
+    {
+      $project: {
+        __v: 0
+      }
+    }
+  ])
+
+  return { roles }
+}
 
 // экспорт api функций
 module.exports = {
-  setRole
+  setRole,
+  getAllRole
 }

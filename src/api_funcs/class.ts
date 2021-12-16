@@ -15,7 +15,7 @@ const instanceOfISC = ( object: any ): object is inputSetClass => {
 }
 
 // api регистрации класса
-const setClass = async (account: IAccount, data: inputSetClass) => {
+const setClass = async( account: IAccount, data: inputSetClass ) => {
 
   // проверки
   if(!account.role.isAdminFun) {
@@ -55,8 +55,9 @@ const setClass = async (account: IAccount, data: inputSetClass) => {
 }
 
 // api получения всех классов
-const getAllClass = async (account: IAccount, data: undefined) => {
+const getAllClass = async( account: IAccount, data: undefined ) => {
   
+  // запрос на все классы
   let allClass = await Classes.aggregate([
     {
       $match: {}
@@ -68,6 +69,7 @@ const getAllClass = async (account: IAccount, data: undefined) => {
     }
   ])
   
+  // возвращение ответа
   return { allClass }
 }
 

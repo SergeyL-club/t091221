@@ -4,6 +4,8 @@ import { Users } from "../utils/models/User"
 import { generateToken } from "../utils/verifyToken"
 import { hashSync, compareSync } from 'bcrypt'
 import { logger } from "../utils/logger"
+import { Classes } from "../utils/models/Class"
+import { Types } from 'mongoose'
 
 // интерфейс input регистрации
 interface inputRegistration{
@@ -13,6 +15,7 @@ interface inputRegistration{
   middleName: string
   lastName: string
   mail: string
+  classId?: string
 }
 
 // функция проверки всех параметров input
@@ -28,6 +31,11 @@ const registration = async (account: undefined, data: inputRegistration ) => {
   // проверка
   if( !(data) || !(instanceOfIR(data)) ) {
     throw new ApiError(400, `Not enough input`)
+  }
+  if(data.classId) {
+    if(!(await Classes.findOne({ _id: data.classId }))) {
+      throw new ApiError(409, `Class undefined`)     
+    }
   }
 
   // поиск стандартной роли
@@ -112,6 +120,7 @@ const authorization = async ( account: undefined, data: inputAuthorization | und
 interface inputRegistrationByCode extends inputRegistration {
   registrationCode: string
   roleId: string
+  classId?: string
 }
 
 
@@ -130,6 +139,11 @@ const registrationByCode = async ( account: undefined, data: inputRegistrationBy
   }
   if(global.SECRET_KEY !== data.registrationCode) {
     throw new ApiError(403, `invalid secret key`)
+  }
+  if(data.classId) {
+    if(!(await Classes.findOne({ _id: data.classId }))) {
+      throw new ApiError(409, `Class undefined`)     
+    }
   }
 
   // поиск роли
@@ -153,7 +167,8 @@ const registrationByCode = async ( account: undefined, data: inputRegistrationBy
       middleName: data.middleName,
       lastName: data.lastName
     },
-    mail: data.mail
+    mail: data.mail,
+    classId: (data.classId) ? new Types.ObjectId(data.classId) : null 
   }).catch(e => {
     // если произошла ошибка
     if(e.code === 11000) throw new ApiError(409, `Duplicate nickname`)
