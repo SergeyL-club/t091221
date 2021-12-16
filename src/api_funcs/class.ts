@@ -58,7 +58,7 @@ const setClass = async( account: IAccount, data: inputSetClass ) => {
 const getAllClass = async( account: IAccount, data: undefined ) => {
   
   // запрос на все классы
-  let allClass = await Classes.aggregate([
+  const allClass = await Classes.aggregate([
     {
       $match: {}
     },

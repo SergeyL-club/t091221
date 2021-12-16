@@ -51,11 +51,14 @@ const setRole = async( account: IAccount, data: inputSetRole | undefined ) => {
 }
 
 const getAllRole = async( account: IAccount, data: undefined ) => {
+  
+  // проверка
   if(!account.role.isAdminFun) {
     throw new ApiError(403, `Can't access this request`) 
   }
 
-  let roles = await Roles.aggregate([
+  // запрос на все роли
+  const roles = await Roles.aggregate([
     {
       $match: {}
     },
@@ -66,6 +69,7 @@ const getAllRole = async( account: IAccount, data: undefined ) => {
     }
   ])
 
+  // возвращение ответа
   return { roles }
 }
 
