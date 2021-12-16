@@ -35,7 +35,7 @@ const registration = async (account: undefined, data: inputRegistration ) => {
 
   // проверка
   if(!defRole) {
-    throw new ApiError(400, `No default role`)
+    throw new ApiError(400, `No default roleId`)
   }
 
   // создание hash пароля
@@ -45,7 +45,7 @@ const registration = async (account: undefined, data: inputRegistration ) => {
   let newUser = await Users.create({
     nickname: data.nickname,
     password: hashPassword,
-    role: defRole._id,
+    roleId: defRole._id,
     FIO: {
       firstName: data.firstName,
       middleName: data.middleName,
@@ -73,12 +73,12 @@ const registration = async (account: undefined, data: inputRegistration ) => {
 // интерфейс input авторизации
 interface inputAuthorization {
   nickname: string
-  passwordHash: string
+  password: string
 }
 
 // функция проверки всех параметров input
 const instanceOfIA = (object: any): object is inputAuthorization => {
-  return "nickname" in object && "passwordHash" in object 
+  return "nickname" in object && "password" in object 
 } 
 
 // api авторизации
@@ -97,7 +97,7 @@ const authorization = async ( account: undefined, data: inputAuthorization | und
   }
 
   // проверка пороля
-  if(compareSync(data.passwordHash, user.passwordHash)) {
+  if(compareSync(data.password, user.passwordHash)) {
     let token = generateToken(user._id)
   
     return {
@@ -111,8 +111,15 @@ const authorization = async ( account: undefined, data: inputAuthorization | und
 // интерфейс input регистрации по коду
 interface inputRegistrationByCode extends inputRegistration {
   registrationCode: string
-  roleName: string
+  roleId: string
 }
+
+
+// функция проверки всех параметров input
+const instanceOfIRBC = (object: any): object is inputRegistrationByCode => {
+  return instanceOfIR(object) && "registrationCode" in object && "roleId" in object
+} 
+
 
 // api регистрация по коду
 const registrationByCode = async ( account: undefined, data: inputRegistrationByCode ) => {
@@ -126,11 +133,11 @@ const registrationByCode = async ( account: undefined, data: inputRegistrationBy
   }
 
   // поиск роли
-  let role = await Roles.findOne({ name: data.roleName })
+  let role = await Roles.findOne({ _id: data.roleId })
 
   // проверка
   if(!role) {
-    throw new ApiError(400, `No role`)
+    throw new ApiError(400, `No roleId`)
   }
 
   // создание hash пароля
@@ -140,7 +147,7 @@ const registrationByCode = async ( account: undefined, data: inputRegistrationBy
   let newUser = await Users.create({
     nickname: data.nickname,
     password: hashPassword,
-    role: role._id,
+    roleId: role._id,
     FIO: {
       firstName: data.firstName,
       middleName: data.middleName,
@@ -164,11 +171,6 @@ const registrationByCode = async ( account: undefined, data: inputRegistrationBy
     throw new ApiError(409, `Registration failed`)
   }
 }
-
-// функция проверки всех параметров input
-const instanceOfIRBC = (object: any): object is inputRegistrationByCode => {
-  return instanceOfIR(object) && "registrationCode" in object && "roleName" in object
-} 
 
 // экспорт api функций
 module.exports = {

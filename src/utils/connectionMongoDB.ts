@@ -1,5 +1,7 @@
 import { createConnection } from 'mongoose'
 import { logger } from './logger'
+import { EModels } from './models/enumModels'
+import { hashSync } from 'bcrypt'
 
 const conn = createConnection(`${DB_URL}`, {
   autoIndex: true,
@@ -22,6 +24,46 @@ conn.once("open", async () => {
           conn.dropCollection(collection.collectionName)
           logger.info(`Drop collection ${collection.collectionName}`)
         } 
+      })
+    })
+
+    conn.db.collections().then(collections => {
+      collections.forEach(collection => {
+        if(collection.collectionName === EModels.roles) {
+          collection.findOne({ isAdminFun: true }).then(result => {
+            if(!result) {
+              collection.insertOne({
+                name: "Admin",
+                isAdminFun: true,
+                isClientFun: false
+              })
+            }
+          })
+        }
+        else if(collection.collectionName === EModels.users) {
+          collection.findOne({ nickname: "german" }).then(result => {
+            if(!result) {
+              let role = collections.filter(item => item.collectionName === EModels.roles) 
+              role[0].findOne({ isAdminFun: true }).then(adminRole => {
+                if(adminRole) {
+                  collection.insertOne({
+                    nickname: "german",
+                    passwordHash: hashSync("сосичлен228", 7),
+                    roleId: adminRole._id,
+                    FIO: {
+                      firstName: "",
+                      middleName: "",
+                      lastName: ""
+                    },
+                    mail: "admin@mail.ru",
+                    money: 0,
+                    likeMoney: 0
+                  })
+                }             
+              })
+            }
+          })
+        }
       })
     })
 

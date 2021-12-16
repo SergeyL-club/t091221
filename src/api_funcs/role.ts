@@ -50,6 +50,7 @@ const setRole = async( account: IAccount, data: inputSetRole | undefined ) => {
   }
 }
 
+
 // экспорт api функций
 module.exports = {
   setRole
