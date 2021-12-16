@@ -2,7 +2,6 @@ import { IRole } from '../utils/models/Role'
 
 export interface IAccount {
   login: string
-  password: string
   role: IRole
   FIO: {
     firstName: string

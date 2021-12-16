@@ -8,7 +8,7 @@ import { logger } from "../utils/logger"
 // интерфейс input регистрации
 interface inputRegistration{
   login: string
-  password: string
+  passwordHash: string
   firstName: string
   middleName: string
   lastName: string
@@ -18,7 +18,7 @@ interface inputRegistration{
 
 // функция проверки всех параметров input
 const instanceOfIR = (object: any): object is inputRegistration => {
-  return "login" in object && "password" in object 
+  return "login" in object && "passwordHash" in object 
     && "firstName" in object && "middleName" in object 
     && "lastName" in object && "mail" in object &&
     "tel" in object
@@ -41,7 +41,7 @@ const registration = async (account: undefined, data: inputRegistration ) => {
   }
 
   // создание hash пароля
-  let hashPassword = hashSync(data.password, 7)
+  let hashPassword = hashSync(data.passwordHash, 7)
 
   // создание и сохранение пользователя
   let newUser = await Users.create({
@@ -76,12 +76,12 @@ const registration = async (account: undefined, data: inputRegistration ) => {
 // интерфейс input авторизации
 interface inputAuthorization {
   login: string
-  password: string
+  passwordHash: string
 }
 
 // функция проверки всех параметров input
 const instanceOfIA = (object: any): object is inputAuthorization => {
-  return "login" in object && "password" in object 
+  return "login" in object && "passwordHash" in object 
 } 
 
 // api авторизации
@@ -100,7 +100,7 @@ const authorization = async ( account: undefined, data: inputAuthorization | und
   }
 
   // проверка пороля
-  if(compareSync(data.password, user.password)) {
+  if(compareSync(data.passwordHash, user.passwordHash)) {
     let token = generateToken(user._id)
   
     return {
@@ -137,7 +137,7 @@ const registrationByCode = async ( account: undefined, data: inputRegistrationBy
   }
 
   // создание hash пароля
-  let hashPassword = hashSync(data.password, 7)
+  let hashPassword = hashSync(data.passwordHash, 7)
 
   // создание и сохранение пользователя
   let newUser = await Users.create({
