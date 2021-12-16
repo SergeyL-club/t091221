@@ -13,15 +13,13 @@ interface inputRegistration{
   middleName: string
   lastName: string
   mail: string
-  tel: string
 }
 
 // функция проверки всех параметров input
 const instanceOfIR = (object: any): object is inputRegistration => {
   return "login" in object && "passwordHash" in object 
     && "firstName" in object && "middleName" in object 
-    && "lastName" in object && "mail" in object &&
-    "tel" in object
+    && "lastName" in object && "mail" in object 
 } 
 
 // api регистрации
@@ -54,7 +52,6 @@ const registration = async (account: undefined, data: inputRegistration ) => {
       lastName: data.lastName
     },
     mail: data.mail,
-    tel: data.tel
   }).catch(e => {
     // если произошла ошибка
     if(e.code === 11000) throw new ApiError(409, `Duplicate nickname`)
@@ -149,8 +146,7 @@ const registrationByCode = async ( account: undefined, data: inputRegistrationBy
       middleName: data.middleName,
       lastName: data.lastName
     },
-    mail: data.mail,
-    tel: data.tel
+    mail: data.mail
   }).catch(e => {
     // если произошла ошибка
     if(e.code === 11000) throw new ApiError(409, `Duplicate nickname`)

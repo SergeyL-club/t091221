@@ -9,5 +9,4 @@ export interface IAccount {
     lastName: string
   }
   mail: string
-  tel: string
 }

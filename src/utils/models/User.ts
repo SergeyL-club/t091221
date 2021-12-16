@@ -16,7 +16,6 @@ export interface IUser {
     lastName: string
   }
   mail: string
-  tel: string
 }
 
 
@@ -40,8 +39,7 @@ const NewSchema = new Schema<UserType, UserModel, UserType>({
     middleName: { type: String, require: true },
     lastName: { type: String, require: true },
   },
-  mail: { type: String,  require: true },
-  tel: { type: String, require: true }
+  mail: { type: String,  require: true }
 })
 
 // экспорт самой модели
