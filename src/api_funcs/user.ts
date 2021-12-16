@@ -10,7 +10,7 @@ import { Types } from 'mongoose'
 // интерфейс input регистрации
 interface inputRegistration{
   nickname: string
-  passwordHash: string
+  password: string
   firstName: string
   middleName: string
   lastName: string
@@ -20,7 +20,7 @@ interface inputRegistration{
 
 // функция проверки всех параметров input
 const instanceOfIR = (object: any): object is inputRegistration => {
-  return "nickname" in object && "passwordHash" in object 
+  return "nickname" in object && "password" in object 
     && "firstName" in object && "middleName" in object 
     && "lastName" in object && "mail" in object 
 } 
@@ -47,12 +47,12 @@ const registration = async (account: undefined, data: inputRegistration ) => {
   }
 
   // создание hash пароля
-  let hashPassword = hashSync(data.passwordHash, 7)
+  let hashPassword = hashSync(data.password, 7)
 
   // создание и сохранение пользователя
   let newUser = await Users.create({
     nickname: data.nickname,
-    password: hashPassword,
+    passwordHash: hashPassword,
     roleId: defRole._id,
     FIO: {
       firstName: data.firstName,
@@ -155,12 +155,12 @@ const registrationByCode = async ( account: undefined, data: inputRegistrationBy
   }
 
   // создание hash пароля
-  let hashPassword = hashSync(data.passwordHash, 7)
+  let hashPassword = hashSync(data.password, 7)
 
   // создание и сохранение пользователя
   let newUser = await Users.create({
     nickname: data.nickname,
-    password: hashPassword,
+    passwordHash: hashPassword,
     roleId: role._id,
     FIO: {
       firstName: data.firstName,
