@@ -7,7 +7,8 @@ export interface IModule {
   desc: string
   lvl: number
   childIds?: Array<Schema.Types.ObjectId>
-  questions?: Array<Schema.Types.ObjectId>
+  questionIds?: Array<Schema.Types.ObjectId>
+  accountWNA?: Array<Schema.Types.ObjectId>
 }
 
 
@@ -25,9 +26,10 @@ interface ModuleModel extends Model<ModuleType>{
 const NewSchema = new Schema<ModuleType, ModuleModel, ModuleType>({
   name: { type: String, required: true, unique: true },
   desc: { type: String, required: true, default: "" },
-  lvl: { type: Number, required: true, default: 0 },
-  childIds: [{ type: Schema.Types.ObjectId, unique: true, ref: EModels.modules }],
-  questions: [{ type: Schema.Types.ObjectId, unique: true, ref: EModels.questions }],
+  lvl: { type: Number, default: 0 },
+  childIds: [{ type: Schema.Types.ObjectId, ref: EModels.modules }],
+  questionIds: [{ type: Schema.Types.ObjectId, ref: EModels.questions }],
+  accountWNA: [{ type: Schema.Types.ObjectId, ref: EModels.users }],
 })
 
 // экспорт самой модели

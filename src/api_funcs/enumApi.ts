@@ -3,4 +3,6 @@ export enum EAPI {
   role = "role",
   class = "class",
   module = "module",
+  question = "question",
+  answer = "answer",
 }

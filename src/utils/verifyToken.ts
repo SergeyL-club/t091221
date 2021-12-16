@@ -15,8 +15,7 @@ export const verify = async(req: any) => {
     else token = data
   })
 
-  let verify
-  if(!(verify = await Users.aggregate([ 
+  let verify = await Users.aggregate([ 
     { 
       $match: { 
         "_id": new mongoose.Types.ObjectId(token.userId) 
@@ -61,10 +60,9 @@ export const verify = async(req: any) => {
     {
       $limit: 1
     }
-  ]))) {
-    throw ApiError.forbidden()
-  }
+  ])
   
+  if(verify.length === 0) throw ApiError.forbidden()
   return verify[0]
 }
 

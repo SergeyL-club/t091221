@@ -4,14 +4,16 @@ import { IAccount } from "./interfaces"
 import { Types } from 'mongoose'
 import { Questions } from "../utils/models/Question"
 import { logger } from "../utils/logger"
+import { Users } from "../utils/models/User"
 
 // интерфейс input регистрации модуля
 interface inputSetModule {
   name: string
   desc: string
   lvl: number
-  childIds?: Array<string>
-  questions?: Array<string>
+  accountWNA?: string | Array<string>
+  childIds?: string | Array<string>
+  questionIds?: string | Array<string>
 }
 
 // функция проверки всех параметров input
@@ -29,12 +31,21 @@ const setModule = async( account: IAccount, data: inputSetModule ) => {
   if(!data || !instanceOfISM(data)) {
     throw new ApiError(400, `Not enough input`)
   }
+  if(typeof data.accountWNA === "string") {
+    data.accountWNA = JSON.parse(data.accountWNA)
+  }
+  if(typeof data.childIds === "string") {
+    data.childIds = JSON.parse(data.childIds)
+  }
+  if(typeof data.questionIds === "string") {
+    data.questionIds = JSON.parse(data.questionIds)
+  }
 
   // проверка заданий
   let questionIds = []
-  if(data.questions) {
-    for (let i = 0; i < data.questions.length; i++) {
-      const question = data.questions[i];
+  if(data.questionIds) {
+    for (let i = 0; i < data.questionIds.length; i++) {
+      const question = data.questionIds[i];
       if(await Questions.findOne({ _id: new Types.ObjectId(question) })) {
         questionIds.push(new Types.ObjectId(question))
       }
@@ -52,15 +63,29 @@ const setModule = async( account: IAccount, data: inputSetModule ) => {
     }
   }
 
+  // проверка связей запрета пользователей
+  let accountIds = []
+  if(data.accountWNA) {
+    for (let i = 0; i < data.accountWNA.length; i++) {
+      const accountId = data.accountWNA[i];
+      let candidate
+      if(candidate = await Users.findOne({ _id: new Types.ObjectId(accountId) })) {
+        accountIds.push(candidate._id)
+      }
+    }
+  }
+
   // создание и сохранение модуля
   let newModuleDoc = await Modules.create({
     name: data.name,
     desc: data.desc,
     lvl: data.lvl,
-    childId: (childIds.length > 0) ? childIds : undefined,
-    questions: (questionIds.length > 0) ? questionIds : undefined,
+    childIds: (childIds.length > 0) ? childIds : undefined,
+    questionIds: (questionIds.length > 0) ? questionIds : undefined,
+    accountWNA: (accountIds.length > 0) ? accountIds : undefined
   }).catch(e => {
     // если произошла ошибка
+    console.log(e)
     if(e.code === 11000) throw new ApiError(409, `Duplicate module`)
     else logger.error(e)
   })
