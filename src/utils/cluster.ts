@@ -4,8 +4,9 @@ import fs from "fs";
 import { Response } from "./response";
 import bodyParser from "body-parser";
 import os from "os";
+import express from 'express'
 import expressFormData from "express-form-data";
-import path from "path/posix";
+import path, { resolve } from "path";
 import { connect } from "mongoose";
 import { verify } from "./verifyToken";
 
@@ -37,6 +38,7 @@ const jsonParser = bodyParser.json();
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
 APP.use(urlencodedParser);
 APP.use(jsonParser);
+APP.use("/statics", express.static(resolve(__dirname, "..\\..\\statics")))
 
 // form data
 APP.use(

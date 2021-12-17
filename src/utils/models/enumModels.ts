@@ -6,4 +6,5 @@ export enum EModels {
   questions = "questions",
   answers = "answers",
   messages = "messages",
+  achievements = "achievements",
 }
