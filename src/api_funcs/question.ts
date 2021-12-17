@@ -1,5 +1,7 @@
+import { Types, Schema } from "mongoose";
 import { ApiError } from "../utils/apiError";
 import { Answers, IAnswer } from "../utils/models/Answer";
+import { Modules } from "../utils/models/Module";
 import { ETypeQuestion, Questions } from "../utils/models/Question";
 import { IAccount } from "./interfaces";
 
@@ -119,6 +121,100 @@ const setQuestion = async (account: IAccount, data: inputSetQuestion) => {
 };
 
 // интерфейс input удаление задачи
+interface inputSetConQuestion {
+  questionId: string;
+  moduleId: string;
+}
+
+// функция проверки всех параметров input
+const instanceOfISCQ = (object: any): object is inputSetConQuestion => {
+  return "questionId" in object && "moduleId" in object;
+};
+
+// api добавление связей к заданию
+const setConQuestion = async (account: IAccount, data: inputSetConQuestion) => {
+  // проверки
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
+  }
+  if (!data || !instanceOfISCQ(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.moduleId) }))) {
+    throw new ApiError(400, `Module undefined`);
+  }
+  if (
+    !(await Questions.findOne({ _id: new Types.ObjectId(data.questionId) }))
+  ) {
+    throw new ApiError(400, `Question undefined`);
+  }
+
+  let question = await Questions.findOne({
+    _id: new Types.ObjectId(data.questionId),
+  });
+
+  // обновление связи
+  if (question) {
+    await Modules.updateOne(
+      { _id: new Types.ObjectId(data.moduleId) },
+      {
+        $addToSet: {
+          questionIds: new Types.ObjectId(data.questionId),
+        },
+      }
+    );
+    return { Ok: true };
+  } else return { Ok: false };
+};
+
+// интерфейс input удаление задачи
+interface inputRemConQuestion {
+  questionId: string;
+  moduleId: string;
+}
+
+// функция проверки всех параметров input
+const instanceOfIRCQ = (object: any): object is inputRemQuestion => {
+  return "questionId" in object && "moduleId" in object;
+};
+
+// api добавление связей к заданию
+const remConQuestion = async (account: IAccount, data: inputRemConQuestion) => {
+  // проверки
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
+  }
+  if (!data || !instanceOfISCQ(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.moduleId) }))) {
+    throw new ApiError(400, `Module undefined`);
+  }
+  if (
+    !(await Questions.findOne({ _id: new Types.ObjectId(data.questionId) }))
+  ) {
+    throw new ApiError(400, `Question undefined`);
+  }
+
+  let question = await Questions.findOne({
+    _id: new Types.ObjectId(data.questionId),
+  });
+
+  // обновление связи
+  if (question) {
+    await Modules.updateOne(
+      { _id: new Types.ObjectId(data.moduleId) },
+      {
+        $pull: {
+          questionIds: new Types.ObjectId(data.questionId),
+        },
+      }
+    );
+    return { Ok: true };
+  } else return { Ok: false };
+};
+
+// интерфейс input удаление задачи
 interface inputRemQuestion {
   questionId: string;
 }
@@ -128,6 +224,7 @@ const instanceOfIRQ = (object: any): object is inputRemQuestion => {
   return "questionId" in object;
 };
 
+// api удаление задания
 const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
   // проверки
   if (!account.role.isAdminFun) {
@@ -136,10 +233,50 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
   if (!data || !instanceOfIRQ(data)) {
     throw new ApiError(400, `Not enough input`);
   }
+  if (
+    !(await Questions.findOne({ _id: new Types.ObjectId(data.questionId) }))
+  ) {
+    throw new ApiError(400, `Question undefined`);
+  }
+
+  // поиск родителей модулю
+  let parents = await Modules.find({
+    questionIds: {
+      $in: [new Types.ObjectId(data.questionId)],
+    },
+  });
+
+  // убираем связи
+  for (let i = 0; i < parents.length; i++) {
+    const parent = parents[i];
+    remConQuestion(account, {
+      questionId: data.questionId,
+      moduleId: String(parent._id),
+    });
+  }
+
+  // удаление всех ответов
+  let questionDel = await Questions.findOne({
+    _id: new Types.ObjectId(data.questionId),
+  });
+  if (questionDel) {
+    await Answers.remove({
+      _id: questionDel.answerIds,
+    });
+  }
+
+  if (questionDel) {
+    await Questions.remove({
+      _id: questionDel._id,
+    });
+    return { Ok: true };
+  } else return { Ok: false };
 };
 
 // экспорт api функций
 module.exports = {
   setQuestion,
   remQuestion,
+  setConQuestion,
+  remConQuestion,
 };

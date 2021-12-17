@@ -1,4 +1,4 @@
-import { model, Schema, Model, Document } from "mongoose";
+import { model, Schema, Model, Document, Types } from "mongoose";
 import { EModels } from "./enumModels";
 
 // интерфейс module
@@ -7,7 +7,7 @@ export interface IModule {
   desc: string;
   lvl: number;
   childIds?: Array<Schema.Types.ObjectId>;
-  questionIds?: Array<Schema.Types.ObjectId>;
+  questionIds?: Array<Types.ObjectId>;
   accountWNA?: Array<Schema.Types.ObjectId>;
 }
 
