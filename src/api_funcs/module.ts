@@ -10,7 +10,7 @@ import { Users } from "../utils/models/User";
 interface inputSetModule {
   name: string;
   desc: string;
-  lvl: number;
+  lvl?: number;
   accountWNA?: string | Array<string>;
   childIds?: string | Array<string>;
   questionIds?: string | Array<string>;
@@ -38,6 +38,9 @@ const setModule = async (account: IAccount, data: inputSetModule) => {
   }
   if (typeof data.questionIds === "string") {
     data.questionIds = JSON.parse(data.questionIds);
+  }
+  if (!data.lvl) {
+    data.lvl = -1;
   }
 
   // проверка заданий
@@ -201,19 +204,29 @@ const setConParentChild = async (
     throw new ApiError(400, `Child module undefined`);
   }
 
+  let parent = await Modules.findOne({ _id: new Types.ObjectId(data.parent) });
+
   // обновление связи
-  await Modules.updateOne(
-    { _id: new Types.ObjectId(data.parent) },
-    {
-      $addToSet: {
-        childIds: new Types.ObjectId(data.child),
-      },
-    }
-  ).catch((e) => {
-    // если неудача
-    throw new ApiError(409, `${e}`);
-  });
-  return { Ok: true };
+  if (parent) {
+    await Modules.updateOne(
+      { _id: new Types.ObjectId(data.parent) },
+      {
+        $addToSet: {
+          childIds: new Types.ObjectId(data.child),
+        },
+      }
+    ).catch((e) => {
+      // если неудача
+      throw new ApiError(409, `${e}`);
+    });
+    await Modules.updateOne(
+      { _id: new Types.ObjectId(data.child) },
+      {
+        lvl: parent.lvl + 1,
+      }
+    );
+    return { Ok: true };
+  } else return { Ok: false };
 };
 
 // api удаление связи
@@ -232,19 +245,29 @@ const remConParentChild = async (
     throw new ApiError(400, `Child module undefined`);
   }
 
+  let parent = await Modules.findOne({ _id: new Types.ObjectId(data.parent) });
+
   // обновление связи
-  await Modules.updateOne(
-    { _id: new Types.ObjectId(data.parent) },
-    {
-      $pull: {
-        childIds: new Types.ObjectId(data.child),
-      },
-    }
-  ).catch((e) => {
-    // если неудача
-    throw new ApiError(409, `${e}`);
-  });
-  return { Ok: true };
+  if (parent) {
+    await Modules.updateOne(
+      { _id: new Types.ObjectId(data.parent) },
+      {
+        $pull: {
+          childIds: new Types.ObjectId(data.child),
+        },
+      }
+    ).catch((e) => {
+      // если неудача
+      throw new ApiError(409, `${e}`);
+    });
+    await Modules.updateOne(
+      { _id: new Types.ObjectId(data.child) },
+      {
+        lvl: -1,
+      }
+    );
+    return { Ok: true };
+  } else return { Ok: false };
 };
 
 // интерфейс input создание связи запрета к модулю
