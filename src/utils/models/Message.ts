@@ -5,7 +5,7 @@ import { EModels } from "./enumModels";
 export interface IMessage {
   authorId: Schema.Types.ObjectId;
   desc: string;
-  likeIds?: Array<Types.ObjectId>;
+  likeIds: Array<Types.ObjectId>;
   moduleId: Schema.Types.ObjectId;
 }
 

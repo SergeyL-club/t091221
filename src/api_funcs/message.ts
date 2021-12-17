@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { ApiError } from "../utils/apiError";
 import { Messages } from "../utils/models/Message";
 import { Modules } from "../utils/models/Module";
+import { Users } from "../utils/models/User";
 import { IAccount } from "./interfaces";
 
 // интерфейс input создания сообщения
@@ -102,8 +103,76 @@ const toggleLike = async (account: IAccount, data: inputSetOrRemLike) => {
   return { Ok: false };
 };
 
+// интерфейс input регистрации и удалении
+interface inputGetMessagesModule {
+  moduleId: string;
+}
+
+// функция проверки всех параметров input
+const instanceOfIGMM = (object: any): object is inputGetMessagesModule => {
+  return "moduleId" in object;
+};
+
+// api регистрации и удалении лайка
+const getMesagesModule = async (
+  account: IAccount,
+  data: inputGetMessagesModule
+) => {
+  // проверки
+  if (!data || !instanceOfIGMM(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.moduleId) }))) {
+    throw new ApiError(400, `Module undefined`);
+  }
+
+  // получение всех сообщений по модулю
+  let messageDocs = await Messages.aggregate([
+    {
+      $match: {
+        moduleId: new Types.ObjectId(data.moduleId),
+      },
+    },
+    {
+      $addFields: {
+        likeCount: { $size: "$likeIds" },
+      },
+    },
+    {
+      $lookup: {
+        from: Users.modelName,
+        localField: "authorId",
+        foreignField: "_id",
+        as: "author",
+      },
+    },
+    {
+      $lookup: {
+        from: Modules.modelName,
+        localField: "moduleId",
+        foreignField: "_id",
+        as: "module",
+      },
+    },
+    {
+      $project: {
+        desc: 1,
+        likeCount: 1,
+        "author._id": 1,
+        "author.nickname": 1,
+        "module._id": 1,
+        "module.name": 1,
+      },
+    },
+  ]);
+
+  // отправка результата
+  return { messages: messageDocs };
+};
+
 // экспорт api функций
 module.exports = {
   setMessage,
   toggleLike,
+  getMesagesModule,
 };
