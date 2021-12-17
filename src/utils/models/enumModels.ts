@@ -5,4 +5,5 @@ export enum EModels {
   modules = "modules",
   questions = "questions",
   answers = "answers",
+  messages = "messages",
 }

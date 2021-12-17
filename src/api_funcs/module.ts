@@ -18,7 +18,7 @@ interface inputSetModule {
 
 // функция проверки всех параметров input
 const instanceOfISM = (object: any): object is inputSetModule => {
-  return "name" in object && "desc" in object && "lvl" in object;
+  return "name" in object && "desc" in object;
 };
 
 // api регисрации модуля
@@ -396,6 +396,9 @@ const setConAccountWN = async (account: IAccount, data: inputConAccountWNA) => {
   };
 };
 
+// api добавить все задачи в модуль
+const setQuestionsModule = async (account: IAccount, data: undefined) => {};
+
 // экспорт api функций
 module.exports = {
   setModule,
@@ -404,4 +407,5 @@ module.exports = {
   setConParentChild,
   remConParentChild,
   setConAccountWN,
+  setQuestionsModule,
 };
