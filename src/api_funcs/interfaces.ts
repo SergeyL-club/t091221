@@ -1,4 +1,7 @@
+import { Types } from "mongoose";
+
 export interface IAccount {
+  _id: Types.ObjectId;
   nickname: string;
   FIO: {
     firstName: string;

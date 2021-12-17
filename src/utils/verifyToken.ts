@@ -43,7 +43,6 @@ export const verify = async (req: any) => {
     },
     {
       $project: {
-        _id: 0,
         nickname: 1,
         "FIO.firstName": 1,
         "FIO.middleName": 1,

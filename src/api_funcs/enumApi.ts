@@ -5,4 +5,5 @@ export enum EAPI {
   module = "module",
   question = "question",
   answer = "answer",
+  message = "message",
 }
