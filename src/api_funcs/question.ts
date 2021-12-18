@@ -124,6 +124,7 @@ const setQuestion = async (account: IAccount, data: inputSetQuestion) => {
 interface inputSetConQuestion {
   questionId: string;
   moduleId: string;
+  milestone?: boolean;
 }
 
 // функция проверки всех параметров input
@@ -148,29 +149,35 @@ const setConQuestion = async (account: IAccount, data: inputSetConQuestion) => {
   ) {
     throw new ApiError(400, `Question undefined`);
   }
-
-  let question = await Questions.findOne({
-    _id: new Types.ObjectId(data.questionId),
-  });
+  if (!data.milestone) {
+    data.milestone = false;
+  }
+  if (
+    await Questions.findOne({
+      _id: new Types.ObjectId(data.questionId),
+      questionIds: {},
+    })
+  ) {
+  }
 
   // обновление связи
-  if (question) {
-    await Modules.updateOne(
-      { _id: new Types.ObjectId(data.moduleId) },
-      {
-        $addToSet: {
-          questionIds: new Types.ObjectId(data.questionId),
-        },
-      }
-    );
+  if (
+    await Modules.conQuestion(
+      new Types.ObjectId(data.moduleId),
+      new Types.ObjectId(data.questionId),
+      data.milestone,
+      true
+    )
+  )
     return { Ok: true };
-  } else return { Ok: false };
+  else return { Ok: false };
 };
 
 // интерфейс input удаление задачи
 interface inputRemConQuestion {
   questionId: string;
   moduleId: string;
+  milestone?: boolean;
 }
 
 // функция проверки всех параметров input
@@ -184,7 +191,7 @@ const remConQuestion = async (account: IAccount, data: inputRemConQuestion) => {
   if (!account.role.isAdminFun) {
     throw new ApiError(403, `Can't access this request`);
   }
-  if (!data || !instanceOfISCQ(data)) {
+  if (!data || !instanceOfIRCQ(data)) {
     throw new ApiError(400, `Not enough input`);
   }
   if (!(await Modules.findOne({ _id: new Types.ObjectId(data.moduleId) }))) {
@@ -195,23 +202,25 @@ const remConQuestion = async (account: IAccount, data: inputRemConQuestion) => {
   ) {
     throw new ApiError(400, `Question undefined`);
   }
+  if (!data.milestone) {
+    data.milestone = false;
+  }
 
   let question = await Questions.findOne({
     _id: new Types.ObjectId(data.questionId),
   });
 
   // обновление связи
-  if (question) {
-    await Modules.updateOne(
-      { _id: new Types.ObjectId(data.moduleId) },
-      {
-        $pull: {
-          questionIds: new Types.ObjectId(data.questionId),
-        },
-      }
-    );
+  if (
+    await Modules.conQuestion(
+      new Types.ObjectId(data.moduleId),
+      new Types.ObjectId(data.questionId),
+      data.milestone,
+      false
+    )
+  )
     return { Ok: true };
-  } else return { Ok: false };
+  else return { Ok: false };
 };
 
 // интерфейс input удаление задачи
@@ -242,7 +251,10 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
   // поиск родителей модулю
   let parents = await Modules.find({
     questionIds: {
-      $in: [new Types.ObjectId(data.questionId)],
+      $in: [
+        { _id: new Types.ObjectId(data.questionId), milestone: true },
+        { _id: new Types.ObjectId(data.questionId), milestone: false },
+      ],
     },
   });
 
@@ -265,6 +277,7 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
     });
   }
 
+  // удаление задачи
   if (questionDel) {
     await Questions.remove({
       _id: questionDel._id,
@@ -273,10 +286,138 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
   } else return { Ok: false };
 };
 
+// интерфейс input toggle соединения задачи с модулем
+interface inputToggleConQuestion {
+  questionId: string;
+  moduleId: string;
+  milestone?: boolean;
+}
+
+// функция проверки всех параметров input
+const instanceOfITCQ = (object: any): object is inputToggleConQuestion => {
+  return "questionId" in object && "moduleId" in object;
+};
+
+// api toggle соединения задачи с модулем
+const toggleConQuestion = async (
+  account: IAccount,
+  data: inputToggleConQuestion
+) => {
+  // проверки
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
+  }
+  if (!data || !instanceOfITCQ(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.moduleId) }))) {
+    throw new ApiError(400, `Module undefined`);
+  }
+  if (
+    !(await Questions.findOne({ _id: new Types.ObjectId(data.questionId) }))
+  ) {
+    throw new ApiError(400, `Question undefined`);
+  }
+
+  if (
+    await Modules.findOne({
+      _id: new Types.ObjectId(data.moduleId),
+      questionIds: {
+        $in: [
+          { _id: new Types.ObjectId(data.questionId), milestone: true },
+          { _id: new Types.ObjectId(data.questionId), milestone: false },
+        ],
+      },
+    })
+  ) {
+    let candidateModule = await Modules.findOne({
+      _id: new Types.ObjectId(data.moduleId),
+    });
+    // проверки на сощуствования
+    if (candidateModule && candidateModule.questionIds) {
+      for (let i = 0; i < candidateModule.questionIds.length; i++) {
+        const candidateQuestion = candidateModule.questionIds[i];
+        // изменение milestone
+        if (
+          candidateQuestion._id.toString() === data.questionId &&
+          candidateQuestion.milestone !== data.milestone &&
+          data.milestone
+        ) {
+          if (
+            await Modules.conQuestion(
+              new Types.ObjectId(data.moduleId),
+              new Types.ObjectId(data.questionId),
+              data.milestone,
+              true
+            )
+          )
+            return { Ok: true, update: true, data };
+          else return { Ok: false };
+        }
+        // удаление
+        else if (
+          candidateQuestion._id.toString() === data.questionId &&
+          !data.milestone
+        ) {
+          if (
+            await Modules.conQuestion(
+              new Types.ObjectId(data.moduleId),
+              new Types.ObjectId(data.questionId),
+              false,
+              false
+            )
+          )
+            return { Ok: true, delete: true, data };
+          else return { Ok: false };
+        }
+      }
+
+      // добавление default
+      if (
+        await Modules.conQuestion(
+          new Types.ObjectId(data.moduleId),
+          new Types.ObjectId(data.questionId),
+          false,
+          true
+        )
+      ) {
+        data.milestone = false;
+        return { Ok: true, create: true, data };
+      } else return { Ok: false };
+    }
+  }
+  // добавление
+  else if (
+    data.milestone &&
+    (await Modules.conQuestion(
+      new Types.ObjectId(data.moduleId),
+      new Types.ObjectId(data.questionId),
+      data.milestone,
+      true
+    ))
+  )
+    return { Ok: true, create: true, data };
+  else {
+    // добавление default
+    if (
+      await Modules.conQuestion(
+        new Types.ObjectId(data.moduleId),
+        new Types.ObjectId(data.questionId),
+        false,
+        true
+      )
+    ) {
+      data.milestone = false;
+      return { Ok: true, create: true, data };
+    } else return { Ok: false };
+  }
+};
+
 // экспорт api функций
 module.exports = {
   setQuestion,
   remQuestion,
   setConQuestion,
   remConQuestion,
+  toggleConQuestion,
 };
