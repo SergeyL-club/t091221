@@ -121,109 +121,6 @@ const setQuestion = async (account: IAccount, data: inputSetQuestion) => {
 };
 
 // интерфейс input удаление задачи
-interface inputSetConQuestion {
-  questionId: string;
-  moduleId: string;
-  milestone?: boolean;
-}
-
-// функция проверки всех параметров input
-const instanceOfISCQ = (object: any): object is inputSetConQuestion => {
-  return "questionId" in object && "moduleId" in object;
-};
-
-// api добавление связей к заданию
-const setConQuestion = async (account: IAccount, data: inputSetConQuestion) => {
-  // проверки
-  if (!account.role.isAdminFun) {
-    throw new ApiError(403, `Can't access this request`);
-  }
-  if (!data || !instanceOfISCQ(data)) {
-    throw new ApiError(400, `Not enough input`);
-  }
-  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.moduleId) }))) {
-    throw new ApiError(400, `Module undefined`);
-  }
-  if (
-    !(await Questions.findOne({ _id: new Types.ObjectId(data.questionId) }))
-  ) {
-    throw new ApiError(400, `Question undefined`);
-  }
-  if (!data.milestone) {
-    data.milestone = false;
-  }
-  if (
-    await Questions.findOne({
-      _id: new Types.ObjectId(data.questionId),
-      questionIds: {},
-    })
-  ) {
-  }
-
-  // обновление связи
-  if (
-    await Modules.conQuestion(
-      new Types.ObjectId(data.moduleId),
-      new Types.ObjectId(data.questionId),
-      data.milestone,
-      true
-    )
-  )
-    return { Ok: true };
-  else return { Ok: false };
-};
-
-// интерфейс input удаление задачи
-interface inputRemConQuestion {
-  questionId: string;
-  moduleId: string;
-  milestone?: boolean;
-}
-
-// функция проверки всех параметров input
-const instanceOfIRCQ = (object: any): object is inputRemQuestion => {
-  return "questionId" in object && "moduleId" in object;
-};
-
-// api добавление связей к заданию
-const remConQuestion = async (account: IAccount, data: inputRemConQuestion) => {
-  // проверки
-  if (!account.role.isAdminFun) {
-    throw new ApiError(403, `Can't access this request`);
-  }
-  if (!data || !instanceOfIRCQ(data)) {
-    throw new ApiError(400, `Not enough input`);
-  }
-  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.moduleId) }))) {
-    throw new ApiError(400, `Module undefined`);
-  }
-  if (
-    !(await Questions.findOne({ _id: new Types.ObjectId(data.questionId) }))
-  ) {
-    throw new ApiError(400, `Question undefined`);
-  }
-  if (!data.milestone) {
-    data.milestone = false;
-  }
-
-  let question = await Questions.findOne({
-    _id: new Types.ObjectId(data.questionId),
-  });
-
-  // обновление связи
-  if (
-    await Modules.conQuestion(
-      new Types.ObjectId(data.moduleId),
-      new Types.ObjectId(data.questionId),
-      data.milestone,
-      false
-    )
-  )
-    return { Ok: true };
-  else return { Ok: false };
-};
-
-// интерфейс input удаление задачи
 interface inputRemQuestion {
   questionId: string;
 }
@@ -261,10 +158,12 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
   // убираем связи
   for (let i = 0; i < parents.length; i++) {
     const parent = parents[i];
-    remConQuestion(account, {
-      questionId: data.questionId,
-      moduleId: String(parent._id),
-    });
+    Modules.conQuestion(
+      parent._id,
+      new Types.ObjectId(data.questionId),
+      false,
+      false
+    );
   }
 
   // удаление всех ответов
@@ -417,7 +316,5 @@ const toggleConQuestion = async (
 module.exports = {
   setQuestion,
   remQuestion,
-  setConQuestion,
-  remConQuestion,
   toggleConQuestion,
 };

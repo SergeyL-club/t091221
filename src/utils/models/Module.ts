@@ -125,6 +125,9 @@ NewSchema.statics.conQuestion = async (
   }
 };
 
+// TODO: post save
+NewSchema.post("save", (doc) => {});
+
 // экспорт самой модели
 export const Modules: ModuleModel = <ModuleModel>(
   model(EModels.modules, NewSchema)

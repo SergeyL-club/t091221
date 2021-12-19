@@ -43,5 +43,8 @@ const NewSchema = new Schema<UserType, UserModel, UserType>({
   classId: { type: Schema.Types.ObjectId, ref: EModels.classes },
 });
 
+// TODO: post save
+NewSchema.post("save", (doc) => {});
+
 // экспорт самой модели
 export const Users: UserModel = <UserModel>model(EModels.users, NewSchema);
