@@ -44,9 +44,7 @@ const registration = async (account: undefined, data: inputRegistration) => {
 
   // поиск стандартной роли
   let defRole = await Roles.findOne({
-    isExecutorFun: false,
     isClientFun: true,
-    isAdminFun: false,
   });
 
   // проверка
@@ -61,6 +59,7 @@ const registration = async (account: undefined, data: inputRegistration) => {
   let newUser = await Users.create({
     nickname: data.nickname,
     passwordHash: hashPassword,
+    classId: data.classId ? new Types.ObjectId(data.classId) : undefined,
     roleId: defRole._id,
     FIO: {
       firstName: data.firstName,

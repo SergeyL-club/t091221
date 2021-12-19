@@ -18,7 +18,7 @@ export interface IUser {
   mail: string;
   money: number;
   likeMoney: number;
-  classId: Schema.Types.ObjectId;
+  classId: Types.ObjectId | undefined;
 }
 
 // расширенный тип

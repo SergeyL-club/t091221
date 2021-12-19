@@ -1,6 +1,8 @@
+import { Types } from "mongoose";
 import { ApiError } from "../utils/apiError";
 import { logger } from "../utils/logger";
 import { Classes } from "../utils/models/Class";
+import { Users } from "../utils/models/User";
 import { IAccount } from "./interfaces";
 
 // интерфейс input регистрации роли
@@ -71,8 +73,65 @@ const getAllClass = async (account: IAccount, data: undefined) => {
   return { allClass };
 };
 
+// интерфейс input удаление роли
+interface inputRemClass {
+  classId: string;
+}
+
+// функция проверки всех параметров input
+const instanceOfIRC = (object: any): object is inputRemClass => {
+  return "classId" in object;
+};
+
+// api регистрации класса
+const remClass = async (account: IAccount, data: inputRemClass) => {
+  // проверки
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
+  }
+  if (!data || !instanceOfIRC(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+  if (!(await Classes.findOne({ _id: new Types.ObjectId(data.classId) }))) {
+    throw new ApiError(400, `Class undefined`);
+  }
+
+  // удаление связей аккаунтов с классом
+  let candidates = await Users.find({
+    classId: new Types.ObjectId(data.classId),
+  });
+  console.log(candidates);
+  if (candidates.length > 0) {
+    for (let i = 0; i < candidates.length; i++) {
+      const candidate = candidates[i];
+      await Users.updateOne(
+        {
+          _id: candidate._id,
+        },
+        {
+          $unset: {
+            classId: 1,
+          },
+        }
+      );
+    }
+  }
+
+  // удаление класса
+  let delClass = await Classes.findOne({
+    _id: new Types.ObjectId(data.classId),
+  });
+  await Classes.remove({
+    _id: new Types.ObjectId(data.classId),
+  });
+
+  // возвращение ответа
+  return { Ok: true, delete: true, delClass };
+};
+
 // экспорт api функций
 module.exports = {
   setClass,
+  remClass,
   getAllClass,
 };
