@@ -7,7 +7,7 @@ export interface IModule {
   name: string;
   desc: string;
   lvl: number;
-  childIds?: Array<Schema.Types.ObjectId>;
+  childIds?: Array<Types.ObjectId>;
   questionIds?: Array<IQuestion>;
   accountWNA?: Array<Schema.Types.ObjectId>;
 }
@@ -29,6 +29,11 @@ interface ModuleModel extends Model<ModuleType> {
     milestone: boolean,
     addOrDel: boolean
   ) => boolean;
+  conChild: (
+    parentId: Types.ObjectId,
+    childId: Types.ObjectId,
+    addOrDel: boolean
+  ) => boolean;
 }
 
 // схема
@@ -43,7 +48,6 @@ const NewSchema = new Schema<ModuleType, ModuleModel, ModuleType>({
         type: Schema.Types.ObjectId,
         ref: EModels.questions,
         required: true,
-        unique: true,
       },
       milestone: { type: Boolean, required: true },
     },
@@ -51,12 +55,12 @@ const NewSchema = new Schema<ModuleType, ModuleModel, ModuleType>({
   accountWNA: [{ type: Schema.Types.ObjectId, ref: EModels.users }],
 });
 
-// изменение связей
+// изменение связей задач
 NewSchema.statics.conQuestion = async (
   moduleId: Types.ObjectId,
   questionId: Types.ObjectId,
   milestone: boolean,
-  addOrDel: number
+  addOrDel: boolean
 ) => {
   // проверки
   let candidateModule;
@@ -122,6 +126,55 @@ NewSchema.statics.conQuestion = async (
       );
       return true;
     }
+  }
+};
+
+// изменение связей детей
+NewSchema.statics.conChild = async (
+  parentId: Types.ObjectId,
+  childId: Types.ObjectId,
+  addOrDel: boolean
+) => {
+  if (addOrDel) {
+    let parent = await Modules.findOne({ _id: new Types.ObjectId(parentId) });
+    let child = await Modules.findOne({ _id: new Types.ObjectId(childId) });
+    if (parent && child) {
+      await Modules.updateOne(
+        { _id: new Types.ObjectId(parentId) },
+        {
+          $addToSet: {
+            childIds: new Types.ObjectId(childId),
+          },
+        }
+      );
+      await Modules.updateOne(
+        { _id: new Types.ObjectId(childId) },
+        {
+          lvl: parent.lvl + 1,
+        }
+      );
+      return true;
+    } else return false;
+  } else {
+    let parent = await Modules.findOne({ _id: new Types.ObjectId(parentId) });
+    let child = await Modules.findOne({ _id: new Types.ObjectId(childId) });
+    if (parent && child) {
+      await Modules.updateOne(
+        { _id: new Types.ObjectId(parentId) },
+        {
+          $pull: {
+            childIds: new Types.ObjectId(childId),
+          },
+        }
+      );
+      await Modules.updateOne(
+        { _id: new Types.ObjectId(childId) },
+        {
+          lvl: -1,
+        }
+      );
+      return true;
+    } else return false;
   }
 };
 

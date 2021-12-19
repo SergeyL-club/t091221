@@ -86,9 +86,9 @@ const setModule = async (account: IAccount, data: inputSetModule) => {
     name: data.name,
     desc: data.desc,
     lvl: data.lvl,
-    childIds: childIds.length > 0 ? childIds : undefined,
-    questionIds: questionIds.length > 0 ? questionIds : undefined,
-    accountWNA: accountIds.length > 0 ? accountIds : undefined,
+    childIds: childIds.length > 0 ? childIds : [],
+    questionIds: questionIds.length > 0 ? questionIds : [],
+    accountWNA: accountIds.length > 0 ? accountIds : [],
   }).catch((e) => {
     // если произошла ошибка
     console.log(e);
@@ -177,97 +177,56 @@ const getAllChild = async (account: IAccount, data: inputGetChilds) => {
   return { module: moduleChilds };
 };
 
-// интерфейс input создание связи
-interface inputConParentChilds {
-  parent: string;
-  child: string;
+// интерфейс input связи детей
+interface inputToggleConChilds {
+  parentId: string;
+  childId: string;
 }
 
 // функция проверки всех параметров input
-const instanceOfICPC = (object: any): object is inputConParentChilds => {
-  return "parent" in object && "child" in object;
+const instanceOfITCC = (object: any): object is inputToggleConChilds => {
+  return "parentId" in object;
 };
-
-// api создание связи
-const setConParentChild = async (
+// api toggle связи детей
+const toggleConChild = async (
   account: IAccount,
-  data: inputConParentChilds
+  data: inputToggleConChilds
 ) => {
   // проверки
-  if (!data || !instanceOfICPC(data)) {
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
+  }
+  if (!data || !instanceOfITCC(data)) {
     throw new ApiError(400, `Not enough input`);
   }
-  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.parent) }))) {
-    throw new ApiError(400, `Parent module undefined`);
+  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.parentId) }))) {
+    throw new ApiError(400, `Parent undefined`);
   }
-  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.child) }))) {
-    throw new ApiError(400, `Child module undefined`);
+  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.childId) }))) {
+    throw new ApiError(400, `Child undefined`);
   }
 
-  let parent = await Modules.findOne({ _id: new Types.ObjectId(data.parent) });
-
-  // обновление связи
-  if (parent) {
-    await Modules.updateOne(
-      { _id: new Types.ObjectId(data.parent) },
-      {
-        $addToSet: {
-          childIds: new Types.ObjectId(data.child),
-        },
-      }
-    ).catch((e) => {
-      // если неудача
-      throw new ApiError(409, `${e}`);
-    });
-    await Modules.updateOne(
-      { _id: new Types.ObjectId(data.child) },
-      {
-        lvl: parent.lvl + 1,
-      }
+  // проверка toggle
+  if (
+    await Modules.findOne({
+      _id: new Types.ObjectId(data.parentId),
+      childIds: { $in: [new Types.ObjectId(data.childId)] },
+    })
+  ) {
+    await Modules.conChild(
+      new Types.ObjectId(data.parentId),
+      new Types.ObjectId(data.childId),
+      false
     );
-    return { Ok: true };
-  } else return { Ok: false };
-};
-
-// api удаление связи
-const remConParentChild = async (
-  account: IAccount,
-  data: inputConParentChilds
-) => {
-  // проверки
-  if (!data || !instanceOfICPC(data)) {
-    throw new ApiError(400, `Not enough input`);
-  }
-  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.parent) }))) {
-    throw new ApiError(400, `Parent module undefined`);
-  }
-  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.child) }))) {
-    throw new ApiError(400, `Child module undefined`);
-  }
-
-  let parent = await Modules.findOne({ _id: new Types.ObjectId(data.parent) });
-
-  // обновление связи
-  if (parent) {
-    await Modules.updateOne(
-      { _id: new Types.ObjectId(data.parent) },
-      {
-        $pull: {
-          childIds: new Types.ObjectId(data.child),
-        },
-      }
-    ).catch((e) => {
-      // если неудача
-      throw new ApiError(409, `${e}`);
-    });
-    await Modules.updateOne(
-      { _id: new Types.ObjectId(data.child) },
-      {
-        lvl: -1,
-      }
+    return { Ok: true, delete: true, data };
+  } else {
+    await Modules.conChild(
+      new Types.ObjectId(data.parentId),
+      new Types.ObjectId(data.childId),
+      true
     );
-    return { Ok: true };
-  } else return { Ok: false };
+    return { Ok: true, create: true, data };
+  }
 };
 
 // интерфейс input создание связи запрета к модулю
@@ -396,16 +355,63 @@ const setConAccountWN = async (account: IAccount, data: inputConAccountWNA) => {
   };
 };
 
+// интерфейс input создание связи запрета к модулю
+interface inputRemModule {
+  moduleId: string;
+}
+
+// функция проверки всех параметров input
+const instanceOfIRM = (object: any): object is inputRemModule => {
+  return "moduleId" in object;
+};
+
+// api удаление module
+const remModule = async (account: IAccount, data: inputRemModule) => {
+  // проверки
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
+  }
+  if (!data || !instanceOfIRM(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+  if (!(await Modules.findOne({ _id: new Types.ObjectId(data.moduleId) }))) {
+    throw new ApiError(400, `Module undefined`);
+  }
+
+  // поиск и удаление всех связей
+  let parents = await Modules.find({
+    childIds: { $in: [new Types.ObjectId(data.moduleId)] },
+  });
+  if (parents && parents.length > 0) {
+    for (let i = 0; i < parents.length; i++) {
+      const moduleParent = parents[i];
+      await Modules.conChild(
+        moduleParent._id,
+        new Types.ObjectId(data.moduleId),
+        false
+      );
+    }
+  }
+
+  // удаление модуля
+  await Modules.remove({
+    _id: new Types.ObjectId(data.moduleId),
+  });
+
+  // возвращение ответа
+  return { Ok: true, delete: true, data };
+};
+
 // api добавить все задачи в модуль
 const setQuestionsModule = async (account: IAccount, data: undefined) => {};
 
 // экспорт api функций
 module.exports = {
   setModule,
+  remModule,
   getAllCharter,
   getAllChild,
-  setConParentChild,
-  remConParentChild,
+  toggleConChild,
   setConAccountWN,
   setQuestionsModule,
 };
