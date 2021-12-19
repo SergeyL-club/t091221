@@ -1,4 +1,4 @@
-import { model, Schema, Model, Document } from "mongoose";
+import { model, Schema, Model, Document, Types } from "mongoose";
 import { EModels } from "./enumModels";
 
 // глобальные константы
@@ -9,7 +9,7 @@ const ObjectId = Schema.Types.ObjectId;
 export interface IUser {
   nickname: string;
   passwordHash: string;
-  roleId: ObjectId;
+  roleId: Types.ObjectId;
   FIO: {
     firstName: string;
     middleName: string;
