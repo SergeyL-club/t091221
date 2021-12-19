@@ -174,6 +174,16 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
     await Answers.remove({
       _id: questionDel.answerIds,
     });
+    if (questionDel.correctAnswerId) {
+      await Answers.remove({
+        _id: questionDel.correctAnswerId,
+      });
+    }
+    if (questionDel.correctAnswerIds) {
+      await Answers.remove({
+        _id: questionDel.correctAnswerIds,
+      });
+    }
   }
 
   // удаление задачи
@@ -181,7 +191,7 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
     await Questions.remove({
       _id: questionDel._id,
     });
-    return { Ok: true };
+    return { Ok: true, delete: true, questionDel };
   } else return { Ok: false };
 };
 
