@@ -170,9 +170,49 @@ const getMesagesModule = async (
   return { messages: messageDocs };
 };
 
+// интерфейс input удаления сообщения
+interface inputRemMessage {
+  messageId: string;
+}
+
+// функция проверки всех параметров input
+const instanceOfIRM = (object: any): object is inputRemMessage => {
+  return "messageId" in object;
+};
+
+// api удаление сообщений
+const remMessage = async (account: IAccount, data: inputRemMessage) => {
+  // проверки
+  if (!data || !instanceOfIRM(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+  if (
+    !(await Messages.findOne({
+      _id: new Types.ObjectId(data.messageId),
+      authorId: account._id,
+    }))
+  ) {
+    throw new ApiError(400, `Module undefined`);
+  }
+
+  // удаление сообщения
+  let delMessage = await Messages.findOne({
+    _id: new Types.ObjectId(data.messageId),
+    authorId: account._id,
+  });
+  await Messages.remove({
+    _id: new Types.ObjectId(data.messageId),
+    authorId: account._id,
+  });
+
+  // возвращение ответа
+  return { Ok: true, delete: true, delMessage };
+};
+
 // экспорт api функций
 module.exports = {
   setMessage,
   toggleLike,
   getMesagesModule,
+  remMessage,
 };

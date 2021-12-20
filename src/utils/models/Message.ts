@@ -3,7 +3,7 @@ import { EModels } from "./enumModels";
 
 // интерфейс message
 export interface IMessage {
-  authorId: Schema.Types.ObjectId;
+  authorId: Types.ObjectId;
   desc: string;
   likeIds: Array<Types.ObjectId>;
   moduleId: Schema.Types.ObjectId;
