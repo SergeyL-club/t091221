@@ -6,6 +6,7 @@ import { hashSync, compareSync } from "bcrypt";
 import { logger } from "../utils/logger";
 import { Classes } from "../utils/models/Class";
 import { Types } from "mongoose";
+import { IAccount } from "./interfaces";
 
 // интерфейс input регистрации
 interface inputRegistration {
@@ -198,9 +199,50 @@ const registrationByCode = async (
   }
 };
 
+// админское удаление пользователя
+// интерфейс input авторизации
+interface inputAdminRemUser {
+  userId: string;
+}
+
+// функция проверки всех параметров input
+const instanceOfIARU = (object: any): object is inputAdminRemUser => {
+  return "userId" in object;
+};
+
+// api удаление пользователя админом
+const adminRemUser = async (account: IAccount, data: inputAdminRemUser) => {
+  // проверки
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
+  }
+  if (!data || !instanceOfIARU(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+
+  // удаление
+  let candidate = await Users.findOne({ _id: new Types.ObjectId(data.userId) });
+  if (candidate) candidate.deleteOne();
+
+  // возвращение ответа
+  return { Ok: true, delete: true, candidate };
+};
+
+// api удаление пользователя
+const remUser = async (account: IAccount, data: undefined) => {
+  // удаление
+  let candidate = await Users.findOne({ _id: account._id });
+  if (candidate) candidate.deleteOne();
+
+  // возвращение ответа
+  return { Ok: true, delete: true, candidate };
+};
+
 // экспорт api функций
 module.exports = {
   registration,
   authorization,
+  adminRemUser,
+  remUser,
   registrationByCode,
 };

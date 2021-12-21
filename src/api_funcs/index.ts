@@ -11,3 +11,4 @@ exports[EAPI.module] = require(`./${EAPI.module}`);
 exports[EAPI.question] = require(`./${EAPI.question}`);
 exports[EAPI.message] = require(`./${EAPI.message}`);
 exports[EAPI.achievement] = require(`./${EAPI.achievement}`);
+exports[EAPI.achievementAccount] = require(`./${EAPI.achievementAccount}`);

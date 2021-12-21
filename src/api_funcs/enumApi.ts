@@ -7,4 +7,5 @@ export enum EAPI {
   answer = "answer",
   message = "message",
   achievement = "achievement",
+  achievementAccount = "achievementAccount",
 }

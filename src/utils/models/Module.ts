@@ -1,6 +1,9 @@
 import { model, Schema, Model, Document, Types } from "mongoose";
+import { AchievementAccounts } from "./AchievementAccount";
 import { EModels } from "./enumModels";
 import { Questions } from "./Question";
+import { Roles } from "./Role";
+import { Users } from "./User";
 
 // интерфейс module
 export interface IModule {
@@ -178,8 +181,49 @@ NewSchema.statics.conChild = async (
   }
 };
 
-// TODO: post save
-NewSchema.post("save", (doc) => {});
+// при добавление модуля, если это предмет (lvl = 0), создание списка достижений
+NewSchema.post("save", async (doc: ModuleType) => {
+  if (doc.lvl === 0) {
+    let candidates = await Users.aggregate([
+      {
+        $lookup: {
+          from: Roles.modelName,
+          localField: "roleId",
+          foreignField: "_id",
+          as: "role",
+        },
+      },
+      {
+        $match: {
+          "role.isClientFun": true,
+        },
+      },
+    ]);
+    if (candidates.length > 0) {
+      for (let i = 0; i < candidates.length; i++) {
+        const candidate = candidates[i];
+        await AchievementAccounts.create({
+          accountId: candidate._id,
+          moduleId: doc._id,
+          achievementIds: [],
+        });
+      }
+    }
+  }
+});
+
+// при удалении модуля, если это предмет (lvl = 0), удаление у всех клиентов
+NewSchema.pre("deleteOne", { document: true, query: false }, async function (
+  next
+) {
+  if (this.lvl === 0) {
+    console.log(this._id);
+    await AchievementAccounts.deleteMany({
+      moduleId: this._id,
+    });
+  }
+  next();
+});
 
 // экспорт самой модели
 export const Modules: ModuleModel = <ModuleModel>(

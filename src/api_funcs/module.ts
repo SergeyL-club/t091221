@@ -394,9 +394,10 @@ const remModule = async (account: IAccount, data: inputRemModule) => {
   }
 
   // удаление модуля
-  await Modules.remove({
+  let deleteModule = await Modules.findOne({
     _id: new Types.ObjectId(data.moduleId),
   });
+  deleteModule?.deleteOne();
 
   // возвращение ответа
   return { Ok: true, delete: true, data };
