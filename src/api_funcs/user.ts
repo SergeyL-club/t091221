@@ -238,11 +238,17 @@ const remUser = async (account: IAccount, data: undefined) => {
   return { Ok: true, delete: true, candidate };
 };
 
+// api verify токена
+const verifyToken = async (account: IAccount, data: undefined) => {
+  return { account };
+};
+
 // экспорт api функций
 module.exports = {
   registration,
   authorization,
   adminRemUser,
   remUser,
+  verifyToken,
   registrationByCode,
 };
