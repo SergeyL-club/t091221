@@ -174,7 +174,7 @@ const getAllChild = async (account: IAccount, data: inputGetChilds) => {
   ]);
 
   // возвращение ответа
-  return { module: moduleChilds };
+  return { module: moduleChilds[0] };
 };
 
 // интерфейс input связи детей
