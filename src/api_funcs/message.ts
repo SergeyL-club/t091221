@@ -114,7 +114,7 @@ const instanceOfIGMM = (object: any): object is inputGetMessagesModule => {
 };
 
 // api регистрации и удалении лайка
-const getMesagesModule = async (
+const getMessagesModule = async (
   account: IAccount,
   data: inputGetMessagesModule
 ) => {
@@ -147,21 +147,20 @@ const getMesagesModule = async (
       },
     },
     {
-      $lookup: {
-        from: Modules.modelName,
-        localField: "moduleId",
-        foreignField: "_id",
-        as: "module",
+      $project: {
+        _id: 1,
+        desc: 1,
+        likeCount: 1,
+        author: { $arrayElemAt: ["$author", 0] },
       },
     },
     {
       $project: {
+        _id: 1,
         desc: 1,
         likeCount: 1,
         "author._id": 1,
         "author.nickname": 1,
-        "module._id": 1,
-        "module.name": 1,
       },
     },
   ]);
@@ -213,6 +212,6 @@ const remMessage = async (account: IAccount, data: inputRemMessage) => {
 module.exports = {
   setMessage,
   toggleLike,
-  getMesagesModule,
+  getMessagesModule,
   remMessage,
 };
