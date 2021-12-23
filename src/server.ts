@@ -7,15 +7,23 @@ import config from "config";
 // set global var
 global.PORT = config.get("PORT") ? (config.get("PORT") as number) : 4000;
 global.GLOBAL_DIR = __dirname;
+
+// salt password global
 global.SALT_PASSWORD = config.get("SALT_PASSWORD")
   ? (config.get("SALT_PASSWORD") as number)
   : 7;
+
+// db name global
 global.DB_NAME = config.get("DB_NAME")
   ? (config.get("DB_NAME") as string)
   : "ApiDefaultDB";
+
+// secret key global
 global.SECRET_KEY = config.get("SECRET_KEY")
   ? (config.get("SECRET_KEY") as string)
   : "sdafvnmewbfghjsgadjh";
+
+// db url global
 global.DB_URL = config.get("DB_URL")
   ? (config.get("DB_URL") as string)
   : `mongodb://localhost:27017/${DB_NAME}`;
