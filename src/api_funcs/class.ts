@@ -28,7 +28,7 @@ const setClass = async (account: IAccount, data: inputSetClass) => {
   if (data.char.length > 1) {
     throw new ApiError(409, `Char length more 1`);
   }
-  if (!/[A-Z]/.test(data.char)) {
+  if (!/[A-Z]|[a-z]|[а-я]|[А-Я]/.test(data.char)) {
     throw new ApiError(409, `Char no letter`);
   }
   if (await Classes.findOne({ char: data.char, act: data.act })) {
