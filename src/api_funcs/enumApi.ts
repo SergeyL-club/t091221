@@ -9,4 +9,5 @@ export enum EAPI {
   achievement = "achievement",
   achievementAccount = "achievementAccount",
   test = "test",
+  xlsx = "xlsx",
 }
