@@ -122,7 +122,7 @@ const authorization = async (
       token,
     };
   } else {
-    throw new ApiError(403, `nickname failed`);
+    throw new ApiError(403, `password failed`);
   }
 };
 
