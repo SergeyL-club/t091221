@@ -85,7 +85,7 @@ const toggleLike = async (account: IAccount, data: inputSetOrRemLike) => {
           },
         }
       );
-      return { Ok: true };
+      return { Ok: true, deleteLike: true };
     } else {
       await Messages.updateOne(
         {
@@ -97,7 +97,7 @@ const toggleLike = async (account: IAccount, data: inputSetOrRemLike) => {
           },
         }
       );
-      return { Ok: true };
+      return { Ok: true, addLike: true };
     }
   }
   return { Ok: false };
