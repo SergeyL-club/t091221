@@ -153,6 +153,7 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
 
       shuffle(answersArray);
       randQuestion.push({
+        _id: questionM.question._id,
         type: questionM.question.type,
         desc: questionM.question.desc,
         answers: answersArray,
