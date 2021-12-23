@@ -50,18 +50,15 @@ const setAchievement = async (account: IAccount, data: inputSetAchievement) => {
   }
 
   // создание статичной папки достижения и добавление картинки
-  console.log(resolve(__dirname, "..\\..\\statics"));
+  console.log(resolve(__dirname, "../../statics"));
 
-  promises.mkdir(
-    resolve(__dirname, `..\\..\\statics\\imgAchievements\\${data.name}`),
+  await promises.mkdir(
+    resolve(__dirname, `../../statics/imgAchievements/${data.name}`),
     { recursive: true }
   );
   let dataImg = await promises.readFile(data.img.path);
-  promises.writeFile(
-    resolve(
-      __dirname,
-      `..\\..\\statics\\imgAchievements\\${data.name}\\img.png`
-    ),
+  await promises.writeFile(
+    resolve(__dirname, `../../statics/imgAchievements/${data.name}/img.png`),
     dataImg
   );
 
@@ -70,7 +67,7 @@ const setAchievement = async (account: IAccount, data: inputSetAchievement) => {
     name: data.name,
     desc: data.desc,
     moduleIds,
-    imgUrl: `statics/imgAchievements/${data.name}/img.png`,
+    imgUrl: `/statics/imgAchievements/${data.name}/img.png`,
   });
 
   // возвращение созданного достижения
@@ -110,11 +107,11 @@ const remAchievement = async (account: IAccount, data: inputRemAchievement) => {
   });
   if (candidate) {
     promises.rmdir(
-      resolve(__dirname, `..\\..\\statics\\imgAchievements\\${candidate.name}`),
+      resolve(__dirname, `../../statics/imgAchievements/${candidate.name}`),
       { recursive: true }
     );
     await Achievements.remove({ _id: candidate._id });
-    return { Ok: true };
+    return { Ok: true, achievement: candidate };
   } else return { Ok: false };
 };
 
