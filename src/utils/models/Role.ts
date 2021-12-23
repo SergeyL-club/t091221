@@ -1,30 +1,23 @@
-import {model, Schema, Model, Document } from 'mongoose';
-import { EModels } from './enumModels';
+import { model, Schema, Model, Document } from "mongoose";
+import { EModels } from "./enumModels";
 
-// интерфейс role
+// global consts
+
+// interface role
 export interface IRole {
-  name: string
-  isAdminFun: boolean
-  isClientFun: boolean
+  name: string;
+  isAdminFun: boolean;
+  isOtherFun: boolean;
 }
 
+// extended type
+interface RoleType extends IRole, Document {}
 
-// расширенный тип
-interface RoleType extends IRole, Document{
+// interface model
+interface RoleModel extends Model<RoleType> {}
 
-}
+// Schema
+const NewSchema = new Schema<RoleType, RoleModel, RoleType>({});
 
-// интерфейс модели 
-interface RoleModel extends Model<RoleType>{
-
-}
-
-// схема
-const NewSchema = new Schema<RoleType, RoleModel, RoleType>({
-  name: { type: String, required: true, unique: true },
-  isAdminFun: { type: Boolean, required: true, default: false },
-  isClientFun: { type: Boolean, required: true, default: false },
-})
-
-// экспорт самой модели
-export const Roles: RoleModel = <RoleModel>model(EModels.roles, NewSchema)
+// export model
+export const Roles: RoleModel = <RoleModel>model(EModels.roles, NewSchema);

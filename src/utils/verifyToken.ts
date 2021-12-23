@@ -1,33 +1,52 @@
-import { Schema } from "mongoose"
-import { ApiError } from "./apiError"
-import { Roles } from "./models/Role"
-import { Users } from "./models/User"
-import jwt from 'jsonwebtoken'
+import { Schema } from "mongoose";
+import { ApiError } from "./apiError";
+import { Roles } from "./models/Role";
+import { Accounts } from "./models/Account";
+import jwt from "jsonwebtoken";
 
-export const verify = async(req: any) => {
-  if(!req.headers.token)
-    throw new ApiError(403, "Token invalid")
+/**
+ *  verify token
+ * @param req - request http
+ * @returns api error (func apiError.ts) or data account
+ */
 
-  let token = req.headers.token
-  await jwt.verify(token, global.SECRET_KEY, { algorithms: ["HS512"] }, (e, data) => {
-    if(e) throw new ApiError(403, `${e.message}`)
-    else token = data
-  })
+export const verify = async (req: any) => {
+  if (!req.headers.token) throw new ApiError(403, "Token invalid");
 
-  let verify
-  if(!(verify = await Users.findOne({ _id: token.userId }).populate({ path: "role", model: Roles }))) {
-    throw ApiError.forbidden()
+  let token = req.headers.token;
+  await jwt.verify(
+    token,
+    global.SECRET_KEY,
+    { algorithms: ["HS512"] },
+    (e, data) => {
+      if (e) throw new ApiError(403, `${e.message}`);
+      else token = data;
+    }
+  );
+
+  let verify;
+  if (
+    !(verify = await Accounts.findOne({ _id: token.userId }).populate({
+      path: "role",
+      model: Roles,
+    }))
+  ) {
+    throw ApiError.forbidden();
   }
 
-  return verify
-}
-
-export const generateToken = (userId: Schema.Types.ObjectId) => {
+  return verify;
+};
+/**
+ * generate token
+ * @param accountId - account id (type ObjectId)
+ * @returns token (valid 24h)
+ */
+export const generateToken = (accountId: Schema.Types.ObjectId) => {
   let payload = {
-    userId
-  }
+    accountId,
+  };
   return jwt.sign(payload, global.SECRET_KEY, {
     expiresIn: "24h",
-    algorithm: "HS512"
-  })
-}
+    algorithm: "HS512",
+  });
+};

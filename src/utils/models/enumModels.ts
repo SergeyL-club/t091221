@@ -1,4 +1,4 @@
 export enum EModels {
-  users = "users",
+  accounts = "accounts",
   roles = "roles",
 }

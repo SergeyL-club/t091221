@@ -1,16 +1,15 @@
 export class ApiError extends Error {
-  
-  code: number
-  
+  code: number;
+
   /**
    * Constructor
    * @param code
    * @param message
    */
   constructor(code: number, message: string) {
-      super(message);
-      this.code = code;
-      this.message = message;
+    super(message);
+    this.code = code;
+    this.message = message;
   }
 
   /**
@@ -19,7 +18,7 @@ export class ApiError extends Error {
    * @return {ApiError}
    */
   static notFound(object = "Object") {
-      return new ApiError(404, `${object} is not found`);
+    return new ApiError(404, `${object} is not found`);
   }
 
   /**
@@ -27,7 +26,7 @@ export class ApiError extends Error {
    * @return {ApiError}
    */
   static forbidden() {
-      return new ApiError(403, `Forbidden access`);
+    return new ApiError(403, `Forbidden access`);
   }
 
   /**
@@ -35,10 +34,10 @@ export class ApiError extends Error {
    * @return {{code, type: string, message: string}}
    */
   getJson() {
-      return {
-          type: "error",
-          code: this.code,
-          message: this.message
-      }
+    return {
+      type: "error",
+      code: this.code,
+      message: this.message,
+    };
   }
 }

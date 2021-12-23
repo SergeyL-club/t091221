@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2018",
     "module": "CommonJS",
-    "rootDir": "./src/",
+    "rootDirs": ["./src/", "./config"],
     "strict": true,
     "esModuleInterop": true,
     "typeRoots": ["./node_modules/@types", "./src/types"]

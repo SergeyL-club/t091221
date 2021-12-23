@@ -1,12 +1,12 @@
-import { IRole } from '../utils/models/Role'
+import { IRole } from "../utils/models/Role";
 
 export interface IAccount {
-  nickname: string
-  role: IRole
+  nickname: string;
+  role: IRole;
   FIO: {
-    firstName: string
-    middleName: string
-    lastName: string
-  }
-  mail: string
+    firstName: string;
+    middleName: string;
+    lastName: string;
+  };
+  mail: string;
 }
