@@ -96,10 +96,10 @@ const setModule = async (account: IAccount, data: inputSetModule) => {
     else logger.error(e);
   });
 
-  // проверка модуля
+  // провwmерка модуля
   if (newModuleDoc) {
     return {
-      newRole: newModuleDoc,
+      neODULE: newModuleDoc,
     };
   } else {
     throw new ApiError(409, `Registration module failed`);
