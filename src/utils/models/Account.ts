@@ -1,8 +1,8 @@
-import { model, Schema, Model, Document } from "mongoose";
+import { model, Schema, Model, Document, Types } from "mongoose";
 import { EModels } from "./enumModels";
 
 // global consts
-type ObjectId = Schema.Types.ObjectId;
+type ObjectId = Types.ObjectId;
 const ObjectId = Schema.Types.ObjectId;
 
 // interface account

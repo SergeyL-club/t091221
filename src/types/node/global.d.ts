@@ -1,23 +1,14 @@
-import { Express } from 'express'
+import { Express } from "express";
 
 declare global {
-  var PORT: number
-  var GLOBAL_DIR: string
-  var WORKER_COUNT: number
-  var APP: Express
-  var DB_NAME: string
-  var DB_URL: string
-  var SECRET_KEY: string
+  var PORT: number;
+  var GLOBAL_DIR: string;
+  var WORKER_COUNT: number;
+  var APP: Express;
+  var DB_NAME: string;
+  var DB_URL: string;
+  var SECRET_KEY: string;
+  var SALT_PASSWORD: number;
 }
 
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-      PORT?: string
-      DB_NAME?: string
-      SECRET_KEY?: string
-    }
-  }
-}
-
-export {}
+export {};

@@ -7,6 +7,9 @@ import config from "config";
 // set global var
 global.PORT = config.get("PORT") ? (config.get("PORT") as number) : 4000;
 global.GLOBAL_DIR = __dirname;
+global.SALT_PASSWORD = config.get("SALT_PASSWORD")
+  ? (config.get("SALT_PASSWORD") as number)
+  : 7;
 global.DB_NAME = config.get("DB_NAME")
   ? (config.get("DB_NAME") as string)
   : "ApiDefaultDB";
@@ -32,6 +35,10 @@ global.APP = express();
 // logging
 if (cluster.isMaster) logger.info(`Created app global`);
 
-// run cluster master
-if (cluster.isMaster) logger.info(`Run cluster`);
-require("./utils/cluster");
+// run cluster master or sync database
+if (process.argv.indexOf("--sync") !== -1) {
+  require("./utils/createDef");
+} else {
+  if (cluster.isMaster) logger.info(`Run cluster`);
+  require("./utils/cluster");
+}

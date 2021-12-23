@@ -8,7 +8,8 @@
     "dev-cp": "ts-node-dev --cls --files --respawn ./src/server.ts -- --cp",
     "start": "ts-node-dev --cls --files ./src/server.ts --multi",
     "start-cp": "ts-node-dev --cls --files ./src/server.ts -- --cp",
-    "dev-multi": "ts-node-dev --cls --files --respawn ./src/server.ts --multi"
+    "dev-multi": "ts-node-dev --cls --files --respawn ./src/server.ts --multi",
+    "sync": "ts-node-dev --cls --files ./src/server.ts --sync"
   },
   "keywords": [],
   "author": "",

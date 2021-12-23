@@ -1,19 +1,23 @@
 import { createConnection } from "mongoose";
 import { logger } from "./logger";
 
+// master connect
 const conn = createConnection(`${DB_URL}`, {
   autoIndex: true,
   autoCreate: true,
 });
 
+// models array
 const Models = require("./models");
 
+// open connect async
 conn.once("open", async () => {
   logger.info(`Open db ${DB_NAME}`);
   conn.modelNames().forEach((name) => {
     logger.info(`Connected model ${name}`);
   });
 
+  // drop other models
   conn.db.collections().then((collections) => {
     collections.forEach((collection) => {
       if (!(collection.collectionName in Models)) {
@@ -24,6 +28,7 @@ conn.once("open", async () => {
     });
   });
 
+  // create new models (empty)
   for (const nameModel in Models) {
     conn.db.listCollections({ name: nameModel }).next((e, collinfo) => {
       if (collinfo) {
