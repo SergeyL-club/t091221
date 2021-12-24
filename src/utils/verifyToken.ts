@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import { ApiError } from "./apiError";
-import { IRole, Roles } from "./models/Role";
+import { Roles } from "./models/Role";
 import { Users } from "./models/User";
 import jwt from "jsonwebtoken";
 import { Classes } from "./models/Class";
