@@ -1,6 +1,8 @@
 import fs, { ReadStream } from "fs";
 import { ApiError } from "../utils/apiError";
 import { IAccount } from "./interfaces";
+import { normalizeTable } from "../utils/xlsxTable";
+import { resolve } from "path/posix";
 
 // интерфейс input загрузка заданий
 interface inputXlsxSetQuestion {
@@ -23,10 +25,22 @@ const setQuestions = async (account: IAccount, data: inputXlsxSetQuestion) => {
   }
 
   // xlsx
-  let excelFile = await fs.promises.readFile(data.xlsx.path);
+  if (typeof data.xlsx.path === "string") {
+    let excelData = await fs.promises.readFile(data.xlsx.path);
+    let filename = /^(.*)\/(\w+)\.xlsx$/.exec(data.xlsx.path);
+    console.log(filename);
 
-  // возвращение ответа
-  return { data };
+    if (filename) {
+      await fs.promises.writeFile(
+        resolve(__dirname, `../tmp/${filename[2]}.xlsx`),
+        excelData
+      );
+    }
+    let excelJson = normalizeTable(data.xlsx.path);
+
+    // возвращение ответа
+    return { excelJson };
+  } else return { Ok: false };
 };
 
 // экспорт api функций
