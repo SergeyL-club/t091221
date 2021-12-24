@@ -141,6 +141,9 @@ const instanceOfIGAUC = (object: any): object is inputGetAllUserClass => {
 // api регистрации класса
 const getUsersClass = async (account: IAccount, data: inputGetAllUserClass) => {
   // проверки
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
+  }
   if (!data || !instanceOfIGAUC(data)) {
     throw new ApiError(400, `Not enough input`);
   }
