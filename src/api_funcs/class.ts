@@ -129,9 +129,42 @@ const remClass = async (account: IAccount, data: inputRemClass) => {
   return { Ok: true, delete: true, delClass };
 };
 
+interface inputGetAllUserClass {
+  classId: string;
+}
+
+// функция проверки всех параметров input
+const instanceOfIGAUC = (object: any): object is inputGetAllUserClass => {
+  return "classId" in object;
+};
+
+// api регистрации класса
+const getUsersClass = async (account: IAccount, data: inputGetAllUserClass) => {
+  // проверки
+  if (!data || !instanceOfIGAUC(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+  if (!(await Classes.findOne({ _id: new Types.ObjectId(data.classId) }))) {
+    throw new ApiError(400, `Class undefined`);
+  }
+
+  // поиск
+  let users = await Users.aggregate([
+    {
+      $match: {
+        classId: new Types.ObjectId(data.classId),
+      },
+    },
+  ]);
+
+  // возвращение ответа
+  return { users };
+};
+
 // экспорт api функций
 module.exports = {
   setClass,
   remClass,
+  getUsersClass,
   getAllClass,
 };
