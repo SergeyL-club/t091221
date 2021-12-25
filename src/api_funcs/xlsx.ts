@@ -28,15 +28,17 @@ const setQuestions = async (account: IAccount, data: inputXlsxSetQuestion) => {
   if (typeof data.xlsx.path === "string") {
     let excelData = await fs.promises.readFile(data.xlsx.path);
     let filename = /^(.*)\/(\w+)\.xlsx$/.exec(data.xlsx.path);
-    console.log(filename);
+    let next_dir = data.xlsx.path;
 
     if (filename) {
-      await fs.promises.writeFile(
-        resolve(__dirname, `../tmp/${filename[2]}.xlsx`),
-        excelData
-      );
+      // await fs.promises.writeFile(
+      //   resolve(global.GLOBAL_DIR, `/tmp/${filename[2]}.xlsx`),
+      //   excelData
+      // );
+      next_dir = `${global.GLOBAL_DIR}/tmp/${filename[2]}.xlsx`;
+      fs.copyFileSync(data.xlsx.path, next_dir)
     }
-    let excelJson = normalizeTable(data.xlsx.path);
+    let excelJson = normalizeTable(next_dir);
 
     // возвращение ответа
     return { excelJson };

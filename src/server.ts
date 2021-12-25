@@ -1,4 +1,6 @@
 import { cpus } from "os";
+import { existsSync, mkdirSync } from "fs";
+import { join } from "path/posix";
 import express from "express";
 import { logger } from "./utils/logger";
 import cluster from "cluster";
@@ -14,6 +16,10 @@ config({
 global.PORT = Number(process.env.PORT) ? Number(process.env.PORT) : 4000;
 global.GLOBAL_DIR = __dirname;
 global.DB_NAME = process.env.DB_NAME ? process.env.DB_NAME : "ApiDefaultDB";
+
+// создаём главные корневые директории, если их нет
+if(!existsSync(join(global.GLOBAL_DIR, "tmp"))) mkdirSync(join(global.GLOBAL_DIR, "tmp"));
+if(!existsSync(join(global.GLOBAL_DIR, "tests"))) mkdirSync(join(global.GLOBAL_DIR, "tests"));
 
 // проверка на несколько потоков (если вкл мод, то половина потоков процессора, иначе или --- --cp настраивается или просто 1 (без --cp))
 if (process.argv.indexOf("--multi") !== -1) {

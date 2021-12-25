@@ -18,44 +18,6 @@ const QUESTION_TYPES = {
 };
 
 /**
- * Normalize rels images
- * @interface
- * @param name: string
- * @param path: string
- */
-interface table_rels_image {
-  name: string | undefined;
-  path: string | undefined;
-}
-
-/**
- * Normalize table options
- * @interface
- * @param[key: string]: object
- */
-interface table_row_interface_options {
-  [key: string]: any | undefined;
-}
-
-/**
- * Normalize table row
- * @interface
- * @param[key: string]: object
- */
-interface table_row_interface {
-  [key: string]: table_row_interface_options;
-}
-
-/**
- * Normalize rels images
- * @interface
- * @param [key: string]: table_rels_image
- */
-interface table_rels_images {
-  [key: string]: table_rels_image;
-}
-
-/**
  * Normalize table
  * @param table_path
  */
@@ -74,6 +36,9 @@ export function normalizeTable(table_path: string) {
   } else {
     throw new ApiError(500, "Table haven't name");
   }
+
+  if(!fs.existsSync(table_path))
+    throw new ApiError(500, "Table path is incorrect");
 
   // Разархивация таблицы как ZIP-архива для извлечения медиа
   fs.createReadStream(table_path)
@@ -111,14 +76,16 @@ export function normalizeTable(table_path: string) {
       // Процесс нормализации таблицы
       for (let i = 2; i < sheet_data.length; i++) {
         const sheet_row_data = sheet_data[i];
-        const final_row: table_row_interface = {};
+        const final_row: any = {};
 
         // Функция добавления столбца в строку
         const adding_row = (
           index: number,
-          options: table_row_interface_options
+          options: any
         ) => {
-          const row: table_row_interface_options = final_row[index.toString()];
+          const row: any = final_row[index.toString()] || {};
+          console.log(options);
+          
           for (let key in options) {
             row[key] = options[key];
           }
@@ -126,7 +93,7 @@ export function normalizeTable(table_path: string) {
         };
 
         // Получаем ассоциации id с картинками
-        let rels_images: table_rels_images = {};
+        let rels_images: any = {};
         for (let rel of xml_drawing_rels_structure["Relationships"][
           "Relationship"
         ]) {
@@ -140,7 +107,7 @@ export function normalizeTable(table_path: string) {
           }
 
           // Новая ассоциация
-          const new_rel: table_rels_image = {
+          const new_rel: any = {
             name: rel_image_name,
             path: path.join(table_source_path, "xl", "media", rel_image_name),
           };
