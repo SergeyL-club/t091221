@@ -243,7 +243,7 @@ const verifyToken = async (account: IAccount, data: undefined) => {
   return { account };
 };
 
-// интерфейс input авторизации
+// интерфейс input изменения параметров пользователя
 interface inputSetParamUser {
   nickname?: string;
   firstName?: string;
@@ -317,12 +317,51 @@ const setParamUser = async (account: IAccount, data: inputSetParamUser) => {
 
 }
 
+// интерфейс input изменение пароля
+interface inputSetPassword {
+  oldPassword: string;
+  newPassword: string;
+}
+
+// функция проверки всех параметров input
+const instanceOfISP = (object: any): object is inputSetPassword => {
+  return (
+    "oldPassword" in object &&
+    "newPassword" in object
+  );
+};
+
+// api изменение пароля
+const setPassword = async (account: IAccount, data: inputSetPassword) => {
+  // проверки
+  if (!data || !instanceOfISP(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+
+  // пользователь
+  let candidate = await Users.findOne({ _id: account._id });
+  if (candidate) {
+    if (compareSync(data.oldPassword, candidate.passwordHash)) {
+      // создание hash пароля
+      let hashPassword = hashSync(data.newPassword, 7);
+      candidate.passwordHash = hashPassword;
+
+      // сохранение
+      if (await candidate.save()) {
+        return { Ok: true, setNewPassword: true }
+      } else return { Ok: false }
+    } else throw new ApiError(409, `No verify old password`);
+  }
+
+}
+
 // экспорт api функций
 module.exports = {
   registration,
   authorization,
   adminRemUser,
   setParamUser,
+  setPassword,
   remUser,
   verifyToken,
   registrationByCode,
