@@ -8,4 +8,5 @@ export enum EModels {
   messages = "messages",
   achievements = "achievements",
   achievementAccounts = "achievementaccounts",
+  tests = "tests",
 }
