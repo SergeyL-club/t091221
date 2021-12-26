@@ -243,11 +243,86 @@ const verifyToken = async (account: IAccount, data: undefined) => {
   return { account };
 };
 
+// интерфейс input авторизации
+interface inputSetParamUser {
+  nickname?: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  mail?: string;
+  classId?: Types.ObjectId;
+}
+
+// интерфейс проверок
+interface IParam {
+  nickname?: boolean;
+  firstName?: boolean;
+  middleName?: boolean;
+  lastName?: boolean;
+  mail?: boolean;
+  class?: boolean;
+}
+
+// api изменение данных
+const setParamUser = async (account: IAccount, data: inputSetParamUser) => {
+  // проверки
+  if (!data) {
+    throw new ApiError(400, `Not enough input`);
+  }
+  let candidate;
+  if (!(candidate = await Users.findOne({ _id: account._id }))) {
+    throw new ApiError(400, `No user`);
+  }
+
+  let param: IParam = {
+    nickname: false,
+    firstName: false,
+    middleName: false,
+    lastName: false,
+    mail: false,
+    class: false
+  };
+  if (data.nickname) {
+    candidate.nickname = data.nickname;
+    param.nickname = true;
+  }
+  if (data.firstName) {
+    candidate.FIO.firstName = data.firstName;
+    param.firstName = true;
+  }
+  if (data.middleName) {
+    candidate.FIO.middleName = data.middleName;
+    param.middleName = true;
+  }
+  if (data.lastName) {
+    candidate.FIO.lastName = data.lastName;
+    param.lastName = true;
+  }
+  if (data.mail) {
+    candidate.mail = data.mail;
+    param.mail = true;
+  }
+  if (data.classId && await Classes.findOne({ _id: new Types.ObjectId(data.classId) })) {
+    candidate.classId = new Types.ObjectId(data.classId);
+    param.class = true;
+  } else if (typeof data.classId !== "undefined") {
+    candidate.classId = undefined;
+    param.class = true;
+  }
+
+  // сохранение
+  if (await candidate.save()) {
+    return { Ok: true, param }
+  } else return { Ok: false }
+
+}
+
 // экспорт api функций
 module.exports = {
   registration,
   authorization,
   adminRemUser,
+  setParamUser,
   remUser,
   verifyToken,
   registrationByCode,
