@@ -1,4 +1,4 @@
-import { model, Schema, Model, Document, Types, Date } from "mongoose";
+import { model, Schema, Model, Document, Types } from "mongoose";
 import { EModels } from "./enumModels";
 
 // интерфейс test

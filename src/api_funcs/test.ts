@@ -249,7 +249,49 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
 
 };
 
+// интерфейс input старт тесты
+interface inputStopTest {
+  testId: string;
+}
+
+// функция проверки всех параметров input
+const instanceOfIStopT = (object: any): object is inputStopTest => {
+  return "testId" in object;
+};
+
+// api завершение теста
+const closeTest = async (account: IAccount, data: inputStopTest) => {
+  // проверки
+  if (!data || !instanceOfIStopT(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+  let testCandidate;
+  if (!(testCandidate = await Tests.findOne({ _id: new Types.ObjectId(data.testId), accountId: account._id }))) {
+    throw new ApiError(400, `No test`);
+  }
+  if (testCandidate.close) {
+    throw new ApiError(409, `Test close`);
+  }
+
+  // TODO: дописать запись теста
+
+
+  // закрытие теста
+  if (testCandidate) {
+    testCandidate.closeDate = new Date();
+    testCandidate.close = true;
+    if (await testCandidate.save()) {
+      return {
+        Ok: true,
+        close: true,
+        closeDate: testCandidate.closeDate,
+      }
+    } else return { Ok: false }
+  }
+}
+
 // экспорт api
 module.exports = {
   startTest,
+  closeTest
 };
