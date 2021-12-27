@@ -152,8 +152,6 @@ const remRole = async (account: IAccount, data: inputRemRole) => {
         );
       }
     }
-  } else {
-    throw new ApiError(409, `Role no delete`);
   }
 
   // удлаение
