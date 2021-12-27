@@ -7,7 +7,7 @@ import { logger } from "../utils/logger";
 import { Users } from "../utils/models/User";
 
 // интерфейс input регистрации модуля
-interface inputSetModule {
+export interface inputSetModule {
   name: string;
   desc: string;
   lvl?: number;
@@ -22,7 +22,7 @@ const instanceOfISM = (object: any): object is inputSetModule => {
 };
 
 // api регисрации модуля
-const setModule = async (account: IAccount, data: inputSetModule) => {
+export const setModule = async (account: IAccount, data: inputSetModule) => {
   // проверки
   if (!account.role.isAdminFun) {
     throw new ApiError(403, `Can't access this request`);
@@ -178,7 +178,7 @@ const getAllChild = async (account: IAccount, data: inputGetChilds) => {
 };
 
 // интерфейс input связи детей
-interface inputToggleConChilds {
+export interface inputToggleConChilds {
   parentId: string;
   childId: string;
 }
@@ -188,7 +188,7 @@ const instanceOfITCC = (object: any): object is inputToggleConChilds => {
   return "parentId" in object;
 };
 // api toggle связи детей
-const toggleConChild = async (
+export const toggleConChild = async (
   account: IAccount,
   data: inputToggleConChilds
 ) => {

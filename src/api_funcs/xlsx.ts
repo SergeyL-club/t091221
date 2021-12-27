@@ -1,12 +1,12 @@
 import fs, { ReadStream } from "fs";
 import { ApiError } from "../utils/apiError";
 import { IAccount } from "./interfaces";
-import { normalizeTable } from "../utils/xlsxTable";
-import { resolve } from "path/posix";
+import { importTest } from "../utils/xlsxTable";
 
 // интерфейс input загрузка заданий
 interface inputXlsxSetQuestion {
-  xlsx: ReadStream;
+  xlsx: ReadStream,
+  moduleId?: string
 }
 
 // функция проверки всех параметров input
@@ -24,24 +24,24 @@ const setQuestions = async (account: IAccount, data: inputXlsxSetQuestion) => {
     throw new ApiError(400, `Not enough input`);
   }
 
-  // xlsx
+  // парсинг и запись в бд
   if (typeof data.xlsx.path === "string") {
-    let excelData = await fs.promises.readFile(data.xlsx.path);
+    // получение основных путей
     let filename = /^(.*)\/(\w+)\.xlsx$/.exec(data.xlsx.path);
     let next_dir = data.xlsx.path;
-
     if (filename) {
-      // await fs.promises.writeFile(
-      //   resolve(global.GLOBAL_DIR, `/tmp/${filename[2]}.xlsx`),
-      //   excelData
-      // );
       next_dir = `${global.GLOBAL_DIR}/tmp/${filename[2]}.xlsx`;
       fs.copyFileSync(data.xlsx.path, next_dir)
     }
-    let excelJson = normalizeTable(next_dir);
+
+    // Получаем модуль
+    let module: any = (data.moduleId) ?? false;
+
+    // основная работа
+    await importTest(account, next_dir, module);
 
     // возвращение ответа
-    return { excelJson };
+    return { loaded: true };
   } else return { Ok: false };
 };
 

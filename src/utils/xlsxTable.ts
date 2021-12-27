@@ -1,6 +1,11 @@
-import { text } from "body-parser";
-import { ApiError } from "./apiError";
 import fs from "fs";
+import { Types } from "mongoose";
+import { Modules, ModuleType } from "./models/Module";
+import { ApiError } from "./apiError";
+import { inputSetModule, setModule, toggleConChild, inputToggleConChilds } from "../api_funcs/module";
+import { IAccount } from "../api_funcs/interfaces";
+import { inputSetQuestion, inputToggleConQuestion, setQuestion, toggleConQuestion } from "../api_funcs/question";
+import { IAnswer } from "./models/Answer";
 
 const path = require("path");
 const xlsx = require("xlsx");
@@ -11,17 +16,19 @@ const { XMLParser } = require("fast-xml-parser");
  * Types of questions
  */
 const QUESTION_TYPES = {
-  OO: "one_option",
-  OOMQ: "one_option_many_question",
-  MO: "many_option",
-  COS: "correct_option_sequence",
+  OO: "oneCorrect",
+  // OOMQ: "one_option_many_question",
+  MO: "manyCorrect",
+  // COS: "correct_option_sequence",
 };
 
 /**
- * Normalize table
+ * Import test
+ * @param account
  * @param table_path
+ * @param module
  */
-export function normalizeTable(table_path: string) {
+export const importTest = (account: IAccount, table_path: string, module: string | boolean) => {
   // Определяем имя таблицы
   let table_name_regex = /^(.*)\/(\w+)\.xlsx$/.exec(table_path);
   let table_name: string;
@@ -43,7 +50,7 @@ export function normalizeTable(table_path: string) {
   // Разархивация таблицы как ZIP-архива для извлечения медиа
   fs.createReadStream(table_path)
     .pipe(unzip.Extract({ path: table_source_path }))
-    .on("close", () => {
+    .on("close", async () => {
       // Читаем Excel файл и берём информацию о первом листе в виде JSON
       const workbook = xlsx.readFile(table_path);
       const sheet_name_list = workbook.SheetNames;
@@ -84,7 +91,6 @@ export function normalizeTable(table_path: string) {
           options: any
         ) => {
           const row: any = final_row[index.toString()] || {};
-          console.log(options);
           
           for (let key in options) {
             row[key] = options[key];
@@ -163,9 +169,23 @@ export function normalizeTable(table_path: string) {
 
       // Структура теста
       const test_structure: any = {
-        theme: sheet_data[0]["__EMPTY_2"],
+        module: sheet_data[0]["__EMPTY_2"],
         list: [],
       };
+
+      // Создаём модуль, исходя из той, что в теме(или находим существующий)
+      let needed_module;
+      if(typeof module !== "boolean" && !(needed_module = await Modules.findOne({_id: new Types.ObjectId(module)}))) {
+        const needed_module_data: inputSetModule = {
+          name: test_structure.module,
+          desc: "Автоматически созданный модуль по данным из таблицы"
+        }; 
+        // Получаем созданный модуль
+        needed_module = await setModule(account, needed_module_data);
+      }
+
+      // Массив созданных тем
+      const created_themes = [];
 
       // Парсим нормализированную таблицу в новый вид
       for (let rId = 0; rId < normalize_table.length; rId++) {
@@ -174,16 +194,42 @@ export function normalizeTable(table_path: string) {
         // Записываем необходимые данные о вопросе
         const type = current_row["2"].text;
         const theme = current_row["3"].text;
-        const lvl = current_row["4"].text;
+        const lvl = (current_row["4"].text) ? 1 : 2;
         const is_milestone = current_row["8"].text === "1" ? true : false;
-        const text = current_row["10"].text;
+        const desc = current_row["10"].text;
 
-        // Ответы
-        const answers = [];
-        const questions = [];
+        // Пропускаем недоделанный тип вопросов
+        if(type !== QUESTION_TYPES.OO && type !== QUESTION_TYPES.OO)
+          continue;
+
+        // Определяемся с темой
+        let needed_theme;
+        if(!(needed_theme = await Modules.findOne({name: theme}))) {
+          const needed_theme_data: inputSetModule = {
+            name: theme,
+            desc: "Автоматически созданный модуль по данным из таблицы"
+          }; 
+          // Получаем созданную тему
+          needed_theme = await setModule(account, needed_theme_data);
+        }
+
+        // Если тема уже имеется - добавляем, если нет, похуй
+        if(created_themes.indexOf(needed_theme) === -1)
+          created_themes.push(needed_theme);
+
+        // Неправильные ответы
+        const answers: Array<IAnswer> = [];
+        // Правильный ответ (OO)
+        let correctAnswer: any;
+        // Правильные ответы (MO)
+        const correctAnswers: Array<IAnswer> = [];
 
         // Данные о тесте
-        let test_data;
+        let test_data = {
+          desc,
+          lvl,
+          type
+        };
 
         // Индекс начала просчётов
         const column_option_start_index = 11;
@@ -204,10 +250,9 @@ export function normalizeTable(table_path: string) {
               if (column_option_start_index === elId) isCorrect = true;
 
               // Создаём объект ответа
-              const data = {
-                text: el.text,
-                image: undefined,
-                isCorrect,
+              const data: IAnswer = {
+                desc: el.text,
+                img: undefined,
               };
 
               // Экспортируем изображения (если имеются)
@@ -217,21 +262,16 @@ export function normalizeTable(table_path: string) {
                   el.image.name
                 );
                 fs.renameSync(el.image.path, image_path);
-                data.image = image_path;
+                data.img = image_path;
               }
 
               // Заносим ответ на вопрос
-              answers.push(data);
+              if(!isCorrect){
+                answers.push(data);
+              } else {
+                correctAnswer = data;
+              }
             }
-
-            test_data = {
-              type,
-              theme,
-              lvl,
-              is_milestone,
-              text,
-              answers,
-            };
             break;
 
           // Один вопрос, несколько возможных вариантов ответа
@@ -252,9 +292,8 @@ export function normalizeTable(table_path: string) {
 
               // Создаём объект ответа
               const data = {
-                text: el.text,
-                image: undefined,
-                isCorrect,
+                desc: el.text,
+                img: undefined,
               };
 
               // Экспортируем изображения (если имеются)
@@ -264,97 +303,93 @@ export function normalizeTable(table_path: string) {
                   el.image.name
                 );
                 fs.renameSync(el.image.path, image_path);
-                data.image = image_path;
+                data.img = image_path;
               }
 
               // Заносим ответ на вопрос
-              answers.push(data);
+              if(!isCorrect){
+                answers.push(data);
+              } else {
+                correctAnswers.push(data);
+              }
 
               el_number++;
             }
 
-            test_data = {
-              type,
-              theme,
-              lvl,
-              is_milestone,
-              text,
-              answers,
-            };
             break;
 
           // Несколько вариантов вопроса, несколько вариантов ответа
-          case QUESTION_TYPES.OOMQ:
-          case QUESTION_TYPES.COS:
-            // Добавление ответов
-            for (
-              let elId = column_option_start_index + 1;
-              elId < Object.keys(current_row).length;
-              elId += 2
-            ) {
-              const el = current_row[elId.toString()];
+          // case QUESTION_TYPES.OOMQ:
+          // case QUESTION_TYPES.COS:
+          //   // Добавление ответов
+          //   for (
+          //     let elId = column_option_start_index + 1;
+          //     elId < Object.keys(current_row).length;
+          //     elId += 2
+          //   ) {
+          //     const el = current_row[elId.toString()];
 
-              // Создаём объект ответа
-              const data = {
-                text: el.text,
-                image: undefined,
-              };
+          //     // Создаём объект ответа
+          //     const data = {
+          //       text: el.text,
+          //       image: undefined,
+          //     };
 
-              // Экспортируем изображения (если имеются)
-              if (el.image && typeof el.image !== "string") {
-                const image_path = path.join(
-                  test_save_media_path,
-                  el.image.name
-                );
-                fs.renameSync(el.image.path, image_path);
-                data.image = image_path;
-              }
+          //     // Экспортируем изображения (если имеются)
+          //     if (el.image && typeof el.image !== "string") {
+          //       const image_path = path.join(
+          //         test_save_media_path,
+          //         el.image.name
+          //       );
+          //       fs.renameSync(el.image.path, image_path);
+          //       data.image = image_path;
+          //     }
 
-              // Заносим ответ на вопрос
-              answers.push(data);
-            }
+          //     // Заносим ответ на вопрос
+          //     answers.push(data);
+          //   }
 
-            // Добавление вопросов
-            let question_index = 0;
-            for (
-              let elId = column_option_start_index;
-              elId < Object.keys(current_row).length;
-              elId += 2
-            ) {
-              const el = current_row[elId.toString()];
+          //   // Добавление вопросов
+          //   let question_index = 0;
+          //   for (
+          //     let elId = column_option_start_index;
+          //     elId < Object.keys(current_row).length;
+          //     elId += 2
+          //   ) {
+          //     const el = current_row[elId.toString()];
 
-              // Создаём объект вопроса
-              const data = {
-                text: el.text,
-                image: undefined,
-              };
+          //     // Создаём объект вопроса
+          //     const data = {
+          //       desc: el.text,
+          //       image: undefined,
+          //     };
 
-              // Экспортируем изображения (если имеются)
-              if (el.image && typeof el.image !== "string") {
-                const image_path = path.join(
-                  test_save_media_path,
-                  el.image.name
-                );
-                fs.renameSync(el.image.path, image_path);
-                data.image = image_path;
-              }
+          //     // Экспортируем изображения (если имеются)
+          //     if (el.image && typeof el.image !== "string") {
+          //       const image_path = path.join(
+          //         test_save_media_path,
+          //         el.image.name
+          //       );
+          //       fs.renameSync(el.image.path, image_path);
+          //       data.image = image_path;
+          //     }
 
-              // Заносим вопрос
-              questions.push(data);
+          //     // Заносим вопрос
+          //     questions.push(data);
 
-              question_index++;
-            }
+          //     question_index++;
+          //   }
 
-            test_data = {
-              type,
-              theme,
-              lvl,
-              is_milestone,
-              text,
-              answers,
-              questions,
-            };
-            break;
+          //   test_data = {
+          //     type,
+          //     theme,
+          //     lvl,
+          //     is_milestone,
+          //     text,
+          //     answers,
+          //     questions,
+          //   };
+          //   break;
 
           // Верная последовательность единиц
           // case QUESTION_TYPES.COS:
@@ -416,20 +451,80 @@ export function normalizeTable(table_path: string) {
 
         // Добавить новый вопрос в лист теста
         test_structure.list.push(test_data);
+
+        // Добавляем вопрос в БД
+        const setQuestionData: inputSetQuestion = {
+          desc: desc,
+          lvl: lvl,
+          type: type,
+          answers: answers,
+        };
+
+        // Добавляем опциональные строки
+        if(type === QUESTION_TYPES.OO) {
+          setQuestionData.correctAnswer = correctAnswer;
+        } else if (type === QUESTION_TYPES.MO) {
+          setQuestionData.correctAnswers = correctAnswers;
+        }
+
+        console.log(setQuestionData);
+        
+        
+        // Создаём новый вопрос в БД и подключаем его к созданной теме
+        let created_question;
+        if((created_question = await setQuestion(account, setQuestionData))) {
+          if(!created_question.newQuestion)
+            throw new ApiError(500, "Shut of fuck");
+
+          let moduleId;
+          if("newModule" in needed_theme) {
+            moduleId = needed_theme.newModule._id;
+          } else {
+            moduleId = needed_theme._id;
+          }
+
+          // Описание отношений вопроса
+          const create_question_rel: inputToggleConQuestion = {
+            questionId: created_question.newQuestion._id,
+            moduleId: moduleId,
+            milestone: is_milestone
+          };
+
+          await toggleConQuestion(account, create_question_rel);
+        }
       }
 
-      // Записываем структуру в файл
-      fs.writeFileSync(
-        path.join(test_save_root_path, "structure.json"),
-        JSON.stringify(test_structure)
-      );
+      // Связанные темы
+      if(needed_module) {
+        for(let theme of created_themes) {
+          let parentId;
+          if("newModule" in needed_module) {
+            parentId = needed_module.newModule._id;
+          } else {
+            parentId = needed_module._id;
+          }
+  
+          let childId;
+          if("newModule" in theme) {
+            childId = theme.newModule._id;
+          } else {
+            childId = theme._id;
+          }
+  
+          const theme_rel_options: inputToggleConChilds = {
+            parentId,
+            childId
+          };
+  
+          await toggleConChild(account, theme_rel_options);
+        }
+      }
       // Удаляем лишний мусор после работы
       fs.rmSync(table_source_path, { recursive: true });
-
-      return true;
-    });
+      fs.rmSync(table_path, { recursive: true });
+  });
 }
 
 module.exports = {
-  normalizeTable,
+  importTest,
 };

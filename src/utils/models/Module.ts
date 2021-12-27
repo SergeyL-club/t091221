@@ -22,7 +22,7 @@ interface IQuestion {
 }
 
 // расширенный тип
-interface ModuleType extends IModule, Document {}
+export interface ModuleType extends IModule, Document {}
 
 // интерфейс модели
 interface ModuleModel extends Model<ModuleType> {

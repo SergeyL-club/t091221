@@ -6,7 +6,7 @@ import { ETypeQuestion, Questions } from "../utils/models/Question";
 import { IAccount } from "./interfaces";
 
 // интерфейс input регистрации задачи
-interface inputSetQuestion {
+export interface inputSetQuestion {
   desc: string;
   lvl: number;
   type: string;
@@ -27,7 +27,7 @@ const instanceOfISQ = (object: any): object is inputSetQuestion => {
 };
 
 // api регистрация задачи
-const setQuestion = async (account: IAccount, data: inputSetQuestion) => {
+export const setQuestion = async (account: IAccount, data: inputSetQuestion) => {
   // проверки
   if (!account.role.isAdminFun) {
     throw new ApiError(403, `Can't access this request`);
@@ -196,7 +196,7 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
 };
 
 // интерфейс input toggle соединения задачи с модулем
-interface inputToggleConQuestion {
+export interface inputToggleConQuestion {
   questionId: string;
   moduleId: string;
   milestone?: boolean;
@@ -208,7 +208,7 @@ const instanceOfITCQ = (object: any): object is inputToggleConQuestion => {
 };
 
 // api toggle соединения задачи с модулем
-const toggleConQuestion = async (
+export const toggleConQuestion = async (
   account: IAccount,
   data: inputToggleConQuestion
 ) => {
