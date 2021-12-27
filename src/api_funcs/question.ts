@@ -65,22 +65,33 @@ const setQuestion = async (account: IAccount, data: inputSetQuestion) => {
   if (typeof data.answers === "object") {
     for (let i = 0; i < data.answers.length; i++) {
       const answer = data.answers[i];
-      let newAnswer = await Answers.create({
-        desc: answer.desc,
-        img: answer.img ? answer.img : undefined,
-      });
-      if (newAnswer) answerIds.push(newAnswer._id);
+      let newAnswer = new Answers();
+      // сохранение картинки в ответе
+      if (answer.img) {
+        let fileData = await fs.promises.readFile(answer.img);
+        await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnser`), { recursive: true });
+        await fs.promises.writeFile(resolve(__dirname, `../../statics/imgAnser/${newAnswer._id}.png`), fileData);
+        newAnswer.img = `/statics/imgAnswer/${newAnswer._id}.png`;
+      }
+      newAnswer.desc = answer.desc;
+      if (await newAnswer.save()) answerIds.push(newAnswer._id);
     }
   }
 
   // создание или поиск правыльного ответа
   let correctAnswer;
   if (data.correctAnswer && typeof data.correctAnswer === "object") {
-    let newAnswer = await Answers.create({
-      desc: data.correctAnswer.desc,
-      img: data.correctAnswer.img ? data.correctAnswer.img : undefined,
-    });
-    if (newAnswer) {
+    let newAnswer = new Answers();
+    newAnswer.desc = data.correctAnswer.desc;
+
+    // сохранение картинки в ответе
+    if (data.correctAnswer.img) {
+      let fileData = await fs.promises.readFile(data.correctAnswer.img);
+      await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnser`), { recursive: true });
+      await fs.promises.writeFile(resolve(__dirname, `../../statics/imgAnser/${newAnswer._id}.png`), fileData);
+      newAnswer.img = `/statics/imgAnswer/${newAnswer._id}.png`;
+    }
+    if (await newAnswer.save()) {
       correctAnswer = newAnswer._id;
     }
   }
@@ -90,11 +101,17 @@ const setQuestion = async (account: IAccount, data: inputSetQuestion) => {
   if (data.correctAnswers && typeof data.correctAnswers === "object") {
     for (let i = 0; i < data.correctAnswers.length; i++) {
       const correctAnswer = data.correctAnswers[i];
-      let newAnswer = await Answers.create({
-        desc: correctAnswer.desc,
-        img: correctAnswer.img ? correctAnswer.img : undefined,
-      });
-      if (newAnswer) {
+      let newAnswer = new Answers();
+      newAnswer.desc = correctAnswer.desc;
+
+      // сохранение картинки в ответе
+      if (correctAnswer.img) {
+        let fileData = await fs.promises.readFile(correctAnswer.img);
+        await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnser`), { recursive: true });
+        await fs.promises.writeFile(resolve(__dirname, `../../statics/imgAnser/${newAnswer._id}.png`), fileData);
+        newAnswer.img = `/statics/imgAnswer/${newAnswer._id}.png`;
+      }
+      if (await newAnswer.save()) {
         correctAnswers.push(newAnswer._id);
       }
     }
@@ -212,15 +229,36 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
 
   // удаление ответов
   if (questionDel) {
+    for (let i = 0; i < questionDel.answerIds.length; i++) {
+      const answerId = questionDel.answerIds[i];
+      try {
+        await fs.promises.rm(resolve(__dirname, `../../statics/imgAnswer/${answerId}.png`));
+      } catch (e) {
+        return;
+      }
+    }
     await Answers.remove({
       _id: questionDel.answerIds,
     });
     if (questionDel.correctAnswerId) {
+      try {
+        await fs.promises.rm(resolve(__dirname, `../../statics/imgAnswer/${questionDel.correctAnswerId}.png`));
+      } catch (e) {
+        return;
+      }
       await Answers.remove({
         _id: questionDel.correctAnswerId,
       });
     }
     if (questionDel.correctAnswerIds) {
+      for (let i = 0; i < questionDel.correctAnswerIds.length; i++) {
+        const answerId = questionDel.correctAnswerIds[i];
+        try {
+          await fs.promises.rm(resolve(__dirname, `../../statics/imgAnswer/${answerId}.png`));
+        } catch (e) {
+          return;
+        }
+      }
       await Answers.remove({
         _id: questionDel.correctAnswerIds,
       });
