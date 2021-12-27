@@ -288,7 +288,6 @@ const closeTest = async (account: IAccount, data: inputStopTest) => {
     data.answers = JSON.parse(data.answers);
   }
 
-  // TODO: дописать запись теста
   // questionId, correctId or correctIds
   if (typeof data.answers === "object") {
     for (let i = 0; i < data.answers.length; i++) {
