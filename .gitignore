@@ -3,3 +3,4 @@
 .env
 src/tests
 src/tmp
+statics/*
