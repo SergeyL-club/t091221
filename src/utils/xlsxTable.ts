@@ -44,13 +44,8 @@ export const importTest = (account: IAccount, table_path: string, module: string
     throw new ApiError(500, "Table haven't name");
   }
 
-<<<<<<< HEAD
   if(!fs.existsSync(table_path))
     throw new ApiError(500, "Table path incorrect");
-=======
-  if (!fs.existsSync(table_path))
-    throw new ApiError(500, "Table path is incorrect");
->>>>>>> 79fe7cce24224b6d434e778d7a639df3787a2431
 
   // Разархивация таблицы как ZIP-архива для извлечения медиа
   fs.createReadStream(table_path)
@@ -211,13 +206,6 @@ export const importTest = (account: IAccount, table_path: string, module: string
         const is_milestone = current_row["8"].text === "1" ? true : false;
         const desc = current_row["10"].text;
 
-<<<<<<< HEAD
-=======
-        // Пропускаем недоделанный тип вопросов
-        if (type !== QUESTION_TYPES.OO && type !== QUESTION_TYPES.OO)
-          continue;
-
->>>>>>> 79fe7cce24224b6d434e778d7a639df3787a2431
         // Определяемся с темой
         let needed_theme;
         if (!(needed_theme = await Modules.findOne({ name: theme }))) {
@@ -489,14 +477,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
         } else if (type === QUESTION_TYPES.MO) {
           setQuestionData.correctAnswers = correctAnswers;
         }
-<<<<<<< HEAD
         
-=======
-
-        console.log(setQuestionData);
-
-
->>>>>>> 79fe7cce24224b6d434e778d7a639df3787a2431
         // Создаём новый вопрос в БД и подключаем его к созданной теме
         let created_question;
         if ((created_question = await setQuestion(account, setQuestionData))) {
