@@ -53,6 +53,7 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
         from: Questions.modelName,
         localField: "questionIds._id",
         foreignField: "_id",
+        let: {},
         as: "questions",
         pipeline: [
           {
@@ -60,7 +61,6 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
               from: Answers.modelName,
               localField: "answerIds",
               foreignField: "_id",
-              pipeline: [],
               as: "answers",
             },
           },
@@ -69,7 +69,6 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
               from: Answers.modelName,
               localField: "correctAnswerId",
               foreignField: "_id",
-              pipeline: [],
               as: "correctAnswer",
             },
           },
@@ -78,7 +77,6 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
               from: Answers.modelName,
               localField: "correctAnswerIds",
               foreignField: "_id",
-              pipeline: [],
               as: "correctAnswers",
             },
           },
