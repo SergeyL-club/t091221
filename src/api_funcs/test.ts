@@ -116,7 +116,7 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
     for (let i = 0; i < questions.length; i++) {
       const questionM = questions[i];
       if (questionM.milestone) {
-        questions = questions.filter(item => item !== questionM);
+        questions = questions.filter((item) => item !== questionM);
         let answersArray = [];
 
         if (
@@ -228,7 +228,7 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
     test.questions.push({
       questionId: question._id,
       answerIds: arrayAnswers,
-    })
+    });
     test.questions[i].answerAccountId = undefined;
     test.questions[i].answerAccountIds = undefined;
   }
@@ -246,12 +246,19 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
       },
     };
   } else new ApiError(409, `Error in creeate test`);
-
 };
 
 // интерфейс input старт тесты
 interface inputStopTest {
   testId: string;
+  answers: string | Array<IAnswerAccount>;
+}
+
+// интерфейс answers
+interface IAnswerAccount {
+  questionId: string;
+  accountAnswerId?: string;
+  accountAnswerIds?: string;
 }
 
 // функция проверки всех параметров input
@@ -266,15 +273,92 @@ const closeTest = async (account: IAccount, data: inputStopTest) => {
     throw new ApiError(400, `Not enough input`);
   }
   let testCandidate;
-  if (!(testCandidate = await Tests.findOne({ _id: new Types.ObjectId(data.testId), accountId: account._id }))) {
+  if (
+    !(testCandidate = await Tests.findOne({
+      _id: new Types.ObjectId(data.testId),
+      accountId: account._id,
+    }))
+  ) {
     throw new ApiError(400, `No test`);
   }
   if (testCandidate.close) {
     throw new ApiError(409, `Test close`);
   }
+  if (data.answers && typeof data.answers === "string") {
+    data.answers = JSON.parse(data.answers);
+  }
 
-  // TODO: дописать запись теста
+  // questionId, correctId or correctIds
+  if (typeof data.answers === "object") {
+    for (let i = 0; i < data.answers.length; i++) {
+      const answer = data.answers[i];
 
+      if (
+        testCandidate.questions.findIndex(
+          (item) => item.questionId.toString() === answer.questionId
+        ) !== -1
+      ) {
+        if (answer.accountAnswerId) {
+          // проверка задачи
+          let index = testCandidate.questions.findIndex(
+            (item) => item.questionId.toString() === answer.questionId
+          );
+          if (index !== -1) {
+            let checkAnswer = false;
+
+            // проверка из списка ответов
+            for (
+              let i = 0;
+              i < testCandidate.questions[index].answerIds.length;
+              i++
+            ) {
+              const answerId = testCandidate.questions[index].answerIds[i];
+              if (answerId.toString() === answer.accountAnswerId) {
+                checkAnswer = true;
+                break;
+              }
+            }
+
+            // сохранение
+            if (checkAnswer) {
+              testCandidate.questions[
+                index
+              ].answerAccountId = new Types.ObjectId(answer.accountAnswerId);
+            }
+          }
+        } else if (answer.accountAnswerIds) {
+          // индекс задачи
+          let index = testCandidate.questions.findIndex(
+            (item) => item.questionId.toString() === answer.questionId
+          );
+
+          // списки ответов
+          let arrayAnswerId = [];
+          for (let i = 0; i < answer.accountAnswerIds.length; i++) {
+            const textId = answer.accountAnswerIds[i];
+
+            // проверка из списка ответов
+            let checkAnswer = false;
+            for (
+              let i = 0;
+              i < testCandidate.questions[index].answerIds.length;
+              i++
+            ) {
+              const answerId = testCandidate.questions[index].answerIds[i];
+              if (answerId.toString() === textId) {
+                checkAnswer = true;
+                break;
+              }
+            }
+            if (checkAnswer) {
+              arrayAnswerId.push(new Types.ObjectId(textId));
+            }
+          }
+          testCandidate.questions[index].answerAccountIds = arrayAnswerId;
+        }
+      }
+    }
+  }
 
   // закрытие теста
   if (testCandidate) {
@@ -285,13 +369,14 @@ const closeTest = async (account: IAccount, data: inputStopTest) => {
         Ok: true,
         close: true,
         closeDate: testCandidate.closeDate,
-      }
-    } else return { Ok: false }
+        questions: testCandidate.questions,
+      };
+    } else return { Ok: false };
   }
-}
+};
 
 // экспорт api
 module.exports = {
   startTest,
-  closeTest
+  closeTest,
 };

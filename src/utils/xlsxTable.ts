@@ -44,8 +44,13 @@ export const importTest = (account: IAccount, table_path: string, module: string
     throw new ApiError(500, "Table haven't name");
   }
 
+<<<<<<< HEAD
   if(!fs.existsSync(table_path))
     throw new ApiError(500, "Table path incorrect");
+=======
+  if (!fs.existsSync(table_path))
+    throw new ApiError(500, "Table path is incorrect");
+>>>>>>> 79fe7cce24224b6d434e778d7a639df3787a2431
 
   // Разархивация таблицы как ZIP-архива для извлечения медиа
   fs.createReadStream(table_path)
@@ -91,7 +96,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
           options: any
         ) => {
           const row: any = final_row[index.toString()] || {};
-          
+
           for (let key in options) {
             row[key] = options[key];
           }
@@ -183,11 +188,11 @@ export const importTest = (account: IAccount, table_path: string, module: string
 
       // Создаём модуль, исходя из того, что в теме(или находим существующий)
       let needed_module;
-      if(typeof module !== "boolean" && !(needed_module = await Modules.findOne({_id: new Types.ObjectId(module)}))) {
+      if (typeof module !== "boolean" && !(needed_module = await Modules.findOne({ _id: new Types.ObjectId(module) }))) {
         const needed_module_data: inputSetModule = {
           name: test_structure.module,
           desc: "Автоматически созданный модуль по данным из таблицы"
-        }; 
+        };
         // Получаем созданный модуль
         needed_module = await setModule(account, needed_module_data);
       }
@@ -206,19 +211,26 @@ export const importTest = (account: IAccount, table_path: string, module: string
         const is_milestone = current_row["8"].text === "1" ? true : false;
         const desc = current_row["10"].text;
 
+<<<<<<< HEAD
+=======
+        // Пропускаем недоделанный тип вопросов
+        if (type !== QUESTION_TYPES.OO && type !== QUESTION_TYPES.OO)
+          continue;
+
+>>>>>>> 79fe7cce24224b6d434e778d7a639df3787a2431
         // Определяемся с темой
         let needed_theme;
-        if(!(needed_theme = await Modules.findOne({name: theme}))) {
+        if (!(needed_theme = await Modules.findOne({ name: theme }))) {
           const needed_theme_data: inputSetModule = {
             name: theme,
             desc: "Автоматически созданный модуль по данным из таблицы"
-          }; 
+          };
           // Получаем созданную тему
           needed_theme = await setModule(account, needed_theme_data);
         }
 
         // Если тема уже имеется - добавляем, если нет, похуй
-        if(created_themes.indexOf(needed_theme) === -1)
+        if (created_themes.indexOf(needed_theme) === -1)
           created_themes.push(needed_theme);
 
         // Неправильные ответы
@@ -274,7 +286,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
               }
 
               // Заносим ответ на вопрос
-              if(!isCorrect){
+              if (!isCorrect) {
                 answers.push(data);
               } else {
                 correctAnswer = data;
@@ -315,7 +327,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
               }
 
               // Заносим ответ на вопрос
-              if(!isCorrect){
+              if (!isCorrect) {
                 answers.push(data);
               } else {
                 correctAnswers.push(data);
@@ -472,20 +484,27 @@ export const importTest = (account: IAccount, table_path: string, module: string
         };
 
         // Добавляем опциональные строки
-        if(type === QUESTION_TYPES.OO) {
+        if (type === QUESTION_TYPES.OO) {
           setQuestionData.correctAnswer = correctAnswer;
         } else if (type === QUESTION_TYPES.MO) {
           setQuestionData.correctAnswers = correctAnswers;
         }
+<<<<<<< HEAD
         
+=======
+
+        console.log(setQuestionData);
+
+
+>>>>>>> 79fe7cce24224b6d434e778d7a639df3787a2431
         // Создаём новый вопрос в БД и подключаем его к созданной теме
         let created_question;
-        if((created_question = await setQuestion(account, setQuestionData))) {
-          if(!created_question.newQuestion)
+        if ((created_question = await setQuestion(account, setQuestionData))) {
+          if (!created_question.newQuestion)
             throw new ApiError(500, "Shut of fuck");
 
           let moduleId;
-          if("newModule" in needed_theme) {
+          if ("newModule" in needed_theme) {
             moduleId = needed_theme.newModule._id;
           } else {
             moduleId = needed_theme._id;
@@ -503,34 +522,34 @@ export const importTest = (account: IAccount, table_path: string, module: string
       }
 
       // Связанные темы
-      if(needed_module) {
-        for(let theme of created_themes) {
+      if (needed_module) {
+        for (let theme of created_themes) {
           let parentId;
-          if("newModule" in needed_module) {
+          if ("newModule" in needed_module) {
             parentId = needed_module.newModule._id;
           } else {
             parentId = needed_module._id;
           }
-  
+
           let childId;
-          if("newModule" in theme) {
+          if ("newModule" in theme) {
             childId = theme.newModule._id;
           } else {
             childId = theme._id;
           }
-  
+
           const theme_rel_options: inputToggleConChilds = {
             parentId,
             childId
           };
-  
+
           await toggleConChild(account, theme_rel_options);
         }
       }
       // Удаляем лишний мусор после работы
       fs.rmSync(table_source_path, { recursive: true });
       fs.rmSync(table_path, { recursive: true });
-  });
+    });
 }
 
 module.exports = {
