@@ -204,7 +204,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
         const theme = current_row["3"].text;
         const lvl = (current_row["4"].text) ? 1 : 2;
         const is_milestone = current_row["8"].text === "1" ? true : false;
-        const desc = current_row["10"].text;
+        let desc = current_row["10"].text;
 
         // Определяемся с темой
         let needed_theme;
@@ -240,6 +240,19 @@ export const importTest = (account: IAccount, table_path: string, module: string
         // Индекс начала просчётов
         const column_option_start_index = 11;
 
+        // Функция переброса картинки в папку для конкретного теста
+        const process_image = (el: any) => {
+          if (el.image && typeof el.image !== "string") {
+            const image_path = path.join(
+              test_save_media_path,
+              el.image.name
+            );
+            fs.renameSync(el.image.path, image_path);
+            return image_path;
+          }
+          return undefined;
+        }
+
         // Далее в зависимости от типа
         switch (type) {
           // Один вариант вопроса, один правильный ответ, несколько вариантов
@@ -248,36 +261,28 @@ export const importTest = (account: IAccount, table_path: string, module: string
               let elId = column_option_start_index + 1;
               elId < Object.keys(current_row).length;
               elId += 2
-            ) {
+            ) 
+            {
               const el = current_row[elId.toString()];
-              console.log(el);
+              const question = current_row[(elId-1).toString()];
               
-              let isCorrect = false;
-
-              // Если это первый ответ - значит он верный
-              if (column_option_start_index === elId) isCorrect = true;
+              // Если есть дополнение к тексту вопроса - добавляем
+              if(question) 
+                desc += " " + question.text;
 
               // Создаём объект ответа
               const data: IAnswer = {
-                desc: el.text || "Image",
-                img: undefined,
+                desc: el.text || "Image answer",
+                img: process_image(el),
               };
 
-              // Экспортируем изображения (если имеются)
-              if (el.image && typeof el.image !== "string") {
-                const image_path = path.join(
-                  test_save_media_path,
-                  el.image.name
-                );
-                fs.renameSync(el.image.path, image_path);
-                data.img = image_path;
-              }
-
               // Заносим ответ на вопрос
-              if (!isCorrect) {
-                answers.push(data);
-              } else {
+              console.log(column_option_start_index, elId-1);
+              
+              if (column_option_start_index === (elId-1)) {
                 correctAnswer = data;
+              } else {
+                answers.push(data);
               }
             }
             break;
@@ -301,18 +306,8 @@ export const importTest = (account: IAccount, table_path: string, module: string
               // Создаём объект ответа
               const data = {
                 desc: el.text,
-                img: undefined,
+                img: process_image(el),
               };
-
-              // Экспортируем изображения (если имеются)
-              if (el.image && typeof el.image !== "string") {
-                const image_path = path.join(
-                  test_save_media_path,
-                  el.image.name
-                );
-                fs.renameSync(el.image.path, image_path);
-                data.img = image_path;
-              }
 
               // Заносим ответ на вопрос
               if (!isCorrect) {
@@ -323,141 +318,10 @@ export const importTest = (account: IAccount, table_path: string, module: string
 
               el_number++;
             }
-
             break;
 
-          // Несколько вариантов вопроса, несколько вариантов ответа
-          // case QUESTION_TYPES.OOMQ:
-          // case QUESTION_TYPES.COS:
-          //   // Добавление ответов
-          //   for (
-          //     let elId = column_option_start_index + 1;
-          //     elId < Object.keys(current_row).length;
-          //     elId += 2
-          //   ) {
-          //     const el = current_row[elId.toString()];
-
-          //     // Создаём объект ответа
-          //     const data = {
-          //       text: el.text,
-          //       image: undefined,
-          //     };
-
-          //     // Экспортируем изображения (если имеются)
-          //     if (el.image && typeof el.image !== "string") {
-          //       const image_path = path.join(
-          //         test_save_media_path,
-          //         el.image.name
-          //       );
-          //       fs.renameSync(el.image.path, image_path);
-          //       data.image = image_path;
-          //     }
-
-          //     // Заносим ответ на вопрос
-          //     answers.push(data);
-          //   }
-
-          //   // Добавление вопросов
-          //   let question_index = 0;
-          //   for (
-          //     let elId = column_option_start_index;
-          //     elId < Object.keys(current_row).length;
-          //     elId += 2
-          //   ) {
-          //     const el = current_row[elId.toString()];
-
-          //     // Создаём объект вопроса
-          //     const data = {
-          //       desc: el.text,
-          //       image: undefined,
-          //     };
-
-          //     // Экспортируем изображения (если имеются)
-          //     if (el.image && typeof el.image !== "string") {
-          //       const image_path = path.join(
-          //         test_save_media_path,
-          //         el.image.name
-          //       );
-          //       fs.renameSync(el.image.path, image_path);
-          //       data.image = image_path;
-          //     }
-
-          //     // Заносим вопрос
-          //     questions.push(data);
-
-          //     question_index++;
-          //   }
-
-          //   test_data = {
-          //     type,
-          //     theme,
-          //     lvl,
-          //     is_milestone,
-          //     text,
-          //     answers,
-          //     questions,
-          //   };
-          //   break;
-
-          // Верная последовательность единиц
-          // case QUESTION_TYPES.COS:
-          //     // Добавление ответов
-          //     for(let elId = column_option_start_index + 1; elId < Object.keys(current_row).length; elId += 2) {
-          //         const el = current_row[elId.toString()];
-
-          //         // Создаём объект ответа
-          //         const data = {
-          //             text: el.text
-          //         };
-
-          //         // Экспортируем изображения (если имеются)
-          //         if(el.image) {
-          //             const image_path = path.join(test_save_media_path, el.image.name);
-          //             fs.renameSync(el.image.path, image_path);
-          //             data["image"] = image_path;
-          //         }
-
-          //         // Заносим ответ на вопрос
-          //         answers.push(data);
-          //     }
-
-          //     // Добавление вопросов
-          //     let question_index = 0;
-          //     for(let elId = column_option_start_index; elId < Object.keys(current_row).length; elId += 2) {
-          //         const el = current_row[elId.toString()];
-
-          //         // Создаём объект вопроса
-          //         const data = {
-          //             text: el.text,
-          //             correctAnswer: answers[question_index]
-          //         };
-
-          //         // Экспортируем изображения (если имеются)
-          //         if(el.image) {
-          //             const image_path = path.join(test_save_media_path, el.image.name);
-          //             fs.renameSync(el.image.path, image_path);
-          //             data["image"] = image_path;
-          //         }
-
-          //         // Заносим вопрос
-          //         questions.push(data);
-
-          //         question_index++;
-          //     }
-
-          //     test_data = {
-          //         type,
-          //         theme,
-          //         lvl,
-          //         is_milestone,
-          //         text,
-          //         answers,
-          //         questions
-          //     };
-          //     break;
-
-            default:
-              continue;
+          default:
+            continue;
         }
 
         // Добавить новый вопрос в лист теста
@@ -477,6 +341,9 @@ export const importTest = (account: IAccount, table_path: string, module: string
         } else if (type === QUESTION_TYPES.MO) {
           setQuestionData.correctAnswers = correctAnswers;
         }
+
+        console.log(setQuestionData);
+        
         
         // Создаём новый вопрос в БД и подключаем его к созданной теме
         let created_question;
