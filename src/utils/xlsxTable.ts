@@ -45,7 +45,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
   }
 
   if(!fs.existsSync(table_path))
-    throw new ApiError(500, "Table path is incorrect");
+    throw new ApiError(500, "Table path incorrect");
 
   // Разархивация таблицы как ZIP-архива для извлечения медиа
   fs.createReadStream(table_path)
@@ -99,41 +99,49 @@ export const importTest = (account: IAccount, table_path: string, module: string
         };
 
         // Получаем ассоциации id с картинками
-        let rels_images: any = {};
-        for (let rel of xml_drawing_rels_structure["Relationships"][
-          "Relationship"
-        ]) {
-          // Имя картинки на основе пути к нему
-          const rel_image_name_regex = /^(.*)\/(.*)$/.exec(rel["@_Target"]);
-          let rel_image_name;
-          if (rel_image_name_regex?.length === 3) {
-            rel_image_name = rel_image_name_regex[2];
-          } else {
-            throw new ApiError(500, "Rels image not found");
+        if(xml_drawing_rels_structure["Relationships"]["Relationship"]) {
+          let rels_images: any = {};
+          const make_rel_image = (rel: any) => {
+            // Имя картинки на основе пути к нему
+            const rel_image_name_regex = /^(.*)\/(.*)$/.exec(rel["@_Target"]);
+            let rel_image_name;
+            if (rel_image_name_regex?.length === 3) {
+              rel_image_name = rel_image_name_regex[2];
+            } else {
+              throw new ApiError(500, "Rels image not found");
+            }
+
+            // Новая ассоциация
+            const new_rel: any = {
+              name: rel_image_name,
+              path: path.join(table_source_path, "xl", "media", rel_image_name),
+            };
+
+            rels_images[rel["@_Id"]] = new_rel;
           }
 
-          // Новая ассоциация
-          const new_rel: any = {
-            name: rel_image_name,
-            path: path.join(table_source_path, "xl", "media", rel_image_name),
-          };
+          if(xml_drawing_rels_structure["Relationships"]["Relationship"].length) {
+            for (let rel of xml_drawing_rels_structure["Relationships"]["Relationship"]) {
+              make_rel_image(rel);
+            }
+          } else {
+            make_rel_image(xml_drawing_rels_structure["Relationships"]["Relationship"]);
+          }
 
-          rels_images[rel["@_Id"]] = new_rel;
-        }
+          // Получаем все картинки для текущей строки
+          for (let obj of xml_drawing_structure["xdr:wsDr"][
+            "xdr:twoCellAnchor"
+          ]) {
+            if (obj["xdr:pic"]) {
+              let from = obj["xdr:from"];
+              if (from["xdr:row"] - 4 === i) {
+                let image_id =
+                  obj["xdr:pic"]["xdr:blipFill"]["a:blip"]["@_r:embed"];
 
-        // Получаем все картинки для текущей строки
-        for (let obj of xml_drawing_structure["xdr:wsDr"][
-          "xdr:twoCellAnchor"
-        ]) {
-          if (obj["xdr:pic"]) {
-            let from = obj["xdr:from"];
-            if (from["xdr:row"] - 4 === i) {
-              let image_id =
-                obj["xdr:pic"]["xdr:blipFill"]["a:blip"]["@_r:embed"];
-
-              adding_row(from["xdr:col"], {
-                image: rels_images[image_id],
-              });
+                adding_row(from["xdr:col"], {
+                  image: rels_images[image_id],
+                });
+              }
             }
           }
         }
@@ -173,7 +181,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
         list: [],
       };
 
-      // Создаём модуль, исходя из той, что в теме(или находим существующий)
+      // Создаём модуль, исходя из того, что в теме(или находим существующий)
       let needed_module;
       if(typeof module !== "boolean" && !(needed_module = await Modules.findOne({_id: new Types.ObjectId(module)}))) {
         const needed_module_data: inputSetModule = {
@@ -198,10 +206,6 @@ export const importTest = (account: IAccount, table_path: string, module: string
         const is_milestone = current_row["8"].text === "1" ? true : false;
         const desc = current_row["10"].text;
 
-        // Пропускаем недоделанный тип вопросов
-        if(type !== QUESTION_TYPES.OO && type !== QUESTION_TYPES.OO)
-          continue;
-
         // Определяемся с темой
         let needed_theme;
         if(!(needed_theme = await Modules.findOne({name: theme}))) {
@@ -223,6 +227,8 @@ export const importTest = (account: IAccount, table_path: string, module: string
         let correctAnswer: any;
         // Правильные ответы (MO)
         const correctAnswers: Array<IAnswer> = [];
+        // Вопросы
+        const questions: Array<any> = [];
 
         // Данные о тесте
         let test_data = {
@@ -244,6 +250,8 @@ export const importTest = (account: IAccount, table_path: string, module: string
               elId += 2
             ) {
               const el = current_row[elId.toString()];
+              console.log(el);
+              
               let isCorrect = false;
 
               // Если это первый ответ - значит он верный
@@ -251,7 +259,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
 
               // Создаём объект ответа
               const data: IAnswer = {
-                desc: el.text,
+                desc: el.text || "Image",
                 img: undefined,
               };
 
@@ -289,7 +297,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
 
               // Если это первый ответ - значит он верный
               if (el_number === correct_number) isCorrect = true;
-
+              
               // Создаём объект ответа
               const data = {
                 desc: el.text,
@@ -447,6 +455,9 @@ export const importTest = (account: IAccount, table_path: string, module: string
           //         questions
           //     };
           //     break;
+
+            default:
+              continue;
         }
 
         // Добавить новый вопрос в лист теста
@@ -466,9 +477,6 @@ export const importTest = (account: IAccount, table_path: string, module: string
         } else if (type === QUESTION_TYPES.MO) {
           setQuestionData.correctAnswers = correctAnswers;
         }
-
-        console.log(setQuestionData);
-        
         
         // Создаём новый вопрос в БД и подключаем его к созданной теме
         let created_question;

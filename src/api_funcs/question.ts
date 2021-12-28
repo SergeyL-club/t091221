@@ -56,9 +56,6 @@ export const setQuestion = async (account: IAccount, data: inputSetQuestion) => 
   if (typeof data.correctAnswer === "string") {
     data.correctAnswer = JSON.parse(data.correctAnswer);
   }
-  if (data.answers.length < 3) {
-    throw new ApiError(400, `Answers lenght more 3`);
-  }
 
   // создание или поиск ответов
   let answerIds = [];
