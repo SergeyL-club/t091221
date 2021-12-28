@@ -53,6 +53,7 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
         from: Questions.modelName,
         localField: "questionIds._id",
         foreignField: "_id",
+        let: {},
         as: "questions",
         pipeline: [
           {
