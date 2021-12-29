@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs, { ReadStream } from "fs";
 import { Types } from "mongoose";
 import { Modules, ModuleType } from "./models/Module";
 import { ApiError } from "./apiError";
@@ -189,6 +189,19 @@ export const importTest = (account: IAccount, table_path: string, module: string
       // Массив созданных тем
       const created_themes = [];
 
+      // Функция переброса картинки в папку для конкретного теста
+      const process_image = (el: any) => {
+        if (el.image && typeof el.image !== "string") {
+          const image_path = path.join(
+            test_save_media_path,
+            el.image.name
+          );
+          fs.renameSync(el.image.path, image_path);
+          return image_path;
+        }
+        return undefined;
+      }
+
       // Парсим нормализированную таблицу в новый вид
       for (let rId = 0; rId < normalize_table.length; rId++) {
         const current_row = normalize_table[rId];
@@ -202,7 +215,12 @@ export const importTest = (account: IAccount, table_path: string, module: string
         const theme = current_row["3"].text || "";
         const lvl = (current_row["4"].text) ? 1 : 2;
         const is_milestone = current_row["8"].text === "1" ? true : false;
-        let desc = current_row["10"].text || "";        
+        let desc = current_row["10"].text || "";  
+        // Добавляем картинку, если есть
+        let img;
+        let img_path = process_image(current_row["10"]);
+        if(typeof img_path !== undefined)
+            img = new ReadStream(process_image(img_path)) 
 
         // Определяемся с темой
         let needed_theme;
@@ -224,19 +242,6 @@ export const importTest = (account: IAccount, table_path: string, module: string
 
         // Индекс начала просчётов
         const column_option_start_index = 11;
-
-        // Функция переброса картинки в папку для конкретного теста
-        const process_image = (el: any) => {
-          if (el.image && typeof el.image !== "string") {
-            const image_path = path.join(
-              test_save_media_path,
-              el.image.name
-            );
-            fs.renameSync(el.image.path, image_path);
-            return image_path;
-          }
-          return undefined;
-        }
 
         // Данные для вопроса
         let answers: any = [];
@@ -281,6 +286,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
                   lvl,
                   milestone: is_milestone,
                   desc: [desc, ((el) ? el.text : "")].join(" "),
+                  img,
                   answers: answers_moment,
                   correctAnswer
                 }
@@ -322,6 +328,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
                 milestone: is_milestone,
                 desc: desc,
                 answers,
+                img,
                 correctAnswers
               }
             );
