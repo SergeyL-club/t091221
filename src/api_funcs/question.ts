@@ -258,7 +258,9 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
         resolve(__dirname, `../../statics/imgQuestion/${questionDel._id}`),
         { recursive: true }
       );
-    } catch (e) {}
+    } catch (e) {
+      return;
+    }
   }
 
   // удаление ответов
