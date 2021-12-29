@@ -263,7 +263,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
             }
             
             // Вопросы
-            for (let elId = column_option_start_index + 1; elId < Object.keys(current_row).length; elId += 2){
+            for (let elId = column_option_start_index; elId < Object.keys(current_row).length; elId += 2){
               // Текущий вопрос
               const el = current_row[elId.toString()];
               // Правильный ответ
