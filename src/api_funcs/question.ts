@@ -117,11 +117,11 @@ export const setQuestion = async (
       // сохранение картинки в ответе
       if (correctAnswer.img) {
         let fileData = await fs.promises.readFile(correctAnswer.img);
-        await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnser`), {
+        await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnswer`), {
           recursive: true,
         });
         await fs.promises.writeFile(
-          resolve(__dirname, `../../statics/imgAnser/${newAnswer._id}.png`),
+          resolve(__dirname, `../../statics/imgAnswer/${newAnswer._id}.png`),
           fileData
         );
         newAnswer.img = `/statics/imgAnswer/${newAnswer._id}.png`;
