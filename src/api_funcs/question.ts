@@ -6,6 +6,7 @@ import { ETypeQuestion, Questions } from "../utils/models/Question";
 import { IAccount } from "./interfaces";
 import fs, { ReadStream } from "fs";
 import { resolve } from "path";
+import { type } from "os";
 
 // интерфейс input регистрации задачи
 export interface inputSetQuestion {
@@ -65,6 +66,11 @@ export const setQuestion = async (
   if (typeof data.answers === "object") {
     for (let i = 0; i < data.answers.length; i++) {
       const answer = data.answers[i];
+
+      if(typeof answer === "undefined")
+        continue;
+        
+
       let newAnswer = new Answers();
       // сохранение картинки в ответе
       if (answer.img) {

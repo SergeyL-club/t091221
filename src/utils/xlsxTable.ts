@@ -195,7 +195,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
 
         // Выключаем член, если я устал
         if(Object.keys(current_row).length === 0)
-          break;
+          continue;
 
         // Записываем необходимые данные о вопросе
         const type = current_row["2"].text || "";
@@ -248,8 +248,11 @@ export const importTest = (account: IAccount, table_path: string, module: string
           // Несколько вариантов вопроса - один правильный ответ
           case QUESTION_TYPES.OO:
             // Ответы
-            for (let elId = column_option_start_index + 1; elId < Object.keys(current_row).length; elId += 2){
+            for (let elId = column_option_start_index + 1; elId < Object.keys(current_row).length + 10; elId += 2){
               const el = current_row[elId.toString()];
+
+              if(typeof el === "undefined")
+                continue;
 
               // Создаём объект ответа
               const answer: IAnswer = {
@@ -283,9 +286,6 @@ export const importTest = (account: IAccount, table_path: string, module: string
                 }
               );
 
-              console.log(questions.pop());
-              
-
               question_index++;
             }
             break;
@@ -293,10 +293,10 @@ export const importTest = (account: IAccount, table_path: string, module: string
           // Один вопрос - множество правильных ответов
           case QUESTION_TYPES.MO: 
             // Ответы
-            for (let elId = column_option_start_index + 1; elId < Object.keys(current_row).length; elId += 2){
+            for (let elId = column_option_start_index + 1; elId < Object.keys(current_row).length + 10; elId += 2){
               const el = current_row[elId.toString()];
               const right_marker = current_row[(elId-1).toString()];
-              
+
               if(typeof el === "undefined")
                 continue;
 
