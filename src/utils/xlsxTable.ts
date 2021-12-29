@@ -163,7 +163,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
         }
 
         normalize_table.push(final_row);
-      }
+      }      
 
       // Создание необходимых директорий
       const path_save_tests = path.join(global.GLOBAL_DIR, "tests");
@@ -192,17 +192,18 @@ export const importTest = (account: IAccount, table_path: string, module: string
       // Парсим нормализированную таблицу в новый вид
       for (let rId = 0; rId < normalize_table.length; rId++) {
         const current_row = normalize_table[rId];
+        console.log(current_row);
 
         // Выключаем член, если я устал
-        if(current_row["2"].text)
+        if(Object.keys(current_row).length === 0)
           break;
 
         // Записываем необходимые данные о вопросе
-        const type = current_row["2"].text;
-        const theme = current_row["3"].text;
+        const type = current_row["2"].text || "";
+        const theme = current_row["3"].text || "";
         const lvl = (current_row["4"].text) ? 1 : 2;
         const is_milestone = current_row["8"].text === "1" ? true : false;
-        let desc = current_row["10"].text;
+        let desc = current_row["10"].text || "";        
 
         // Определяемся с темой
         let needed_theme;
@@ -293,9 +294,6 @@ export const importTest = (account: IAccount, table_path: string, module: string
             for (let elId = column_option_start_index + 1; elId < Object.keys(current_row).length; elId += 2){
               const el = current_row[elId.toString()];
               const right_marker = current_row[(elId-1).toString()];
-
-              console.log(right_marker);
-              console.log(el);
               
               if(typeof el === "undefined")
                 continue;
@@ -333,6 +331,9 @@ export const importTest = (account: IAccount, table_path: string, module: string
 
         // Добавляем все вопросы в БД
         for(let question of questions) {
+          console.log(question);
+          
+
           // Добавляем вопрос в БД
           const setQuestionData: inputSetQuestion = question;
           
