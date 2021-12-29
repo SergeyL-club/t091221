@@ -192,7 +192,6 @@ export const importTest = (account: IAccount, table_path: string, module: string
       // Парсим нормализированную таблицу в новый вид
       for (let rId = 0; rId < normalize_table.length; rId++) {
         const current_row = normalize_table[rId];
-        console.log(current_row);
 
         // Выключаем член, если я устал
         if(Object.keys(current_row).length === 0)
@@ -269,7 +268,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
               // Правильный ответ
               const correctAnswer = answers[question_index];
               // Удалить правильный ответ из копии ответов
-              const answers_moment = Array.from(answers);
+              const answers_moment: any = Array.from(answers);
               delete answers_moment[question_index];
 
               // Добавить вопрос
@@ -279,10 +278,13 @@ export const importTest = (account: IAccount, table_path: string, module: string
                   lvl,
                   milestone: is_milestone,
                   desc: [desc, ((el) ? el.text : "")].join(" "),
-                  answers,
+                  answers: answers_moment,
                   correctAnswer
                 }
               );
+
+              console.log(questions.pop());
+              
 
               question_index++;
             }
@@ -331,9 +333,6 @@ export const importTest = (account: IAccount, table_path: string, module: string
 
         // Добавляем все вопросы в БД
         for(let question of questions) {
-          console.log(question);
-          
-
           // Добавляем вопрос в БД
           const setQuestionData: inputSetQuestion = question;
           
