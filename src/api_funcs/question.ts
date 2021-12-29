@@ -30,7 +30,10 @@ const instanceOfISQ = (object: any): object is inputSetQuestion => {
 };
 
 // api регистрация задачи
-export const setQuestion = async (account: IAccount, data: inputSetQuestion) => {
+export const setQuestion = async (
+  account: IAccount,
+  data: inputSetQuestion
+) => {
   // проверки
   if (!account.role.isAdminFun) {
     throw new ApiError(403, `Can't access this request`);
@@ -66,8 +69,13 @@ export const setQuestion = async (account: IAccount, data: inputSetQuestion) => 
       // сохранение картинки в ответе
       if (answer.img) {
         let fileData = await fs.promises.readFile(answer.img);
-        await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnser`), { recursive: true });
-        await fs.promises.writeFile(resolve(__dirname, `../../statics/imgAnser/${newAnswer._id}.png`), fileData);
+        await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnser`), {
+          recursive: true,
+        });
+        await fs.promises.writeFile(
+          resolve(__dirname, `../../statics/imgAnser/${newAnswer._id}.png`),
+          fileData
+        );
         newAnswer.img = `/statics/imgAnswer/${newAnswer._id}.png`;
       }
       newAnswer.desc = answer.desc;
@@ -84,8 +92,13 @@ export const setQuestion = async (account: IAccount, data: inputSetQuestion) => 
     // сохранение картинки в ответе
     if (data.correctAnswer.img) {
       let fileData = await fs.promises.readFile(data.correctAnswer.img);
-      await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnser`), { recursive: true });
-      await fs.promises.writeFile(resolve(__dirname, `../../statics/imgAnser/${newAnswer._id}.png`), fileData);
+      await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnser`), {
+        recursive: true,
+      });
+      await fs.promises.writeFile(
+        resolve(__dirname, `../../statics/imgAnser/${newAnswer._id}.png`),
+        fileData
+      );
       newAnswer.img = `/statics/imgAnswer/${newAnswer._id}.png`;
     }
     if (await newAnswer.save()) {
@@ -104,8 +117,13 @@ export const setQuestion = async (account: IAccount, data: inputSetQuestion) => 
       // сохранение картинки в ответе
       if (correctAnswer.img) {
         let fileData = await fs.promises.readFile(correctAnswer.img);
-        await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnser`), { recursive: true });
-        await fs.promises.writeFile(resolve(__dirname, `../../statics/imgAnser/${newAnswer._id}.png`), fileData);
+        await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnser`), {
+          recursive: true,
+        });
+        await fs.promises.writeFile(
+          resolve(__dirname, `../../statics/imgAnser/${newAnswer._id}.png`),
+          fileData
+        );
         newAnswer.img = `/statics/imgAnswer/${newAnswer._id}.png`;
       }
       if (await newAnswer.save()) {
@@ -123,11 +141,10 @@ export const setQuestion = async (account: IAccount, data: inputSetQuestion) => 
   newQuestionDoc.correctAnswerId = correctAnswer ? correctAnswer : undefined;
   newQuestionDoc.correctAnswerIds = correctAnswers ? correctAnswers : undefined;
 
-
   // проверка картинки
   if (data.img) {
     newQuestionDoc.img = [];
-    // создание репозитория   
+    // создание репозитория
     await fs.promises.mkdir(
       resolve(__dirname, `../../statics/imgQuestion/${newQuestionDoc._id}`),
       { recursive: true }
@@ -140,16 +157,32 @@ export const setQuestion = async (account: IAccount, data: inputSetQuestion) => 
         let fileContent = await fs.promises.readFile(imgOne.path);
 
         // save
-        await fs.promises.writeFile(resolve(__dirname, `../../statics/imgQuestion/${newQuestionDoc._id}/img${i}.png`), fileContent);
-        newQuestionDoc.img.push(`/statics/imgQuestion/${newQuestionDoc._id}/img${i}.png`);
+        await fs.promises.writeFile(
+          resolve(
+            __dirname,
+            `../../statics/imgQuestion/${newQuestionDoc._id}/img${i}.png`
+          ),
+          fileContent
+        );
+        newQuestionDoc.img.push(
+          `/statics/imgQuestion/${newQuestionDoc._id}/img${i}.png`
+        );
       }
     } else {
       // data
       let fileContent = await fs.promises.readFile(data.img.path);
 
       // save
-      await fs.promises.writeFile(resolve(__dirname, `../../statics/imgQuestion/${newQuestionDoc._id}/img1.png`), fileContent);
-      newQuestionDoc.img.push(`/statics/imgQuestion/${newQuestionDoc._id}/img1.png`);
+      await fs.promises.writeFile(
+        resolve(
+          __dirname,
+          `../../statics/imgQuestion/${newQuestionDoc._id}/img1.png`
+        ),
+        fileContent
+      );
+      newQuestionDoc.img.push(
+        `/statics/imgQuestion/${newQuestionDoc._id}/img1.png`
+      );
     }
   }
   if (!(await newQuestionDoc.save())) {
@@ -213,7 +246,6 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
     );
   }
 
-
   // удаление всех ответов
   let questionDel = await Questions.findOne({
     _id: new Types.ObjectId(data.questionId),
@@ -221,7 +253,14 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
 
   // удаление картинки
   if (questionDel && questionDel.img) {
-    await fs.promises.rmdir(resolve(__dirname, `../../statics/imgQuestion/${questionDel._id}`), { recursive: true });
+    try {
+      await fs.promises.rmdir(
+        resolve(__dirname, `../../statics/imgQuestion/${questionDel._id}`),
+        { recursive: true }
+      );
+    } catch (e) {
+      return;
+    }
   }
 
   // удаление ответов
@@ -229,7 +268,9 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
     for (let i = 0; i < questionDel.answerIds.length; i++) {
       const answerId = questionDel.answerIds[i];
       try {
-        await fs.promises.rm(resolve(__dirname, `../../statics/imgAnswer/${answerId}.png`));
+        await fs.promises.rm(
+          resolve(__dirname, `../../statics/imgAnswer/${answerId}.png`)
+        );
       } catch (e) {
         return;
       }
@@ -239,7 +280,12 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
     });
     if (questionDel.correctAnswerId) {
       try {
-        await fs.promises.rm(resolve(__dirname, `../../statics/imgAnswer/${questionDel.correctAnswerId}.png`));
+        await fs.promises.rm(
+          resolve(
+            __dirname,
+            `../../statics/imgAnswer/${questionDel.correctAnswerId}.png`
+          )
+        );
       } catch (e) {
         return;
       }
@@ -251,7 +297,9 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
       for (let i = 0; i < questionDel.correctAnswerIds.length; i++) {
         const answerId = questionDel.correctAnswerIds[i];
         try {
-          await fs.promises.rm(resolve(__dirname, `../../statics/imgAnswer/${answerId}.png`));
+          await fs.promises.rm(
+            resolve(__dirname, `../../statics/imgAnswer/${answerId}.png`)
+          );
         } catch (e) {
           return;
         }
