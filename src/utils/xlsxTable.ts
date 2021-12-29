@@ -216,11 +216,6 @@ export const importTest = (account: IAccount, table_path: string, module: string
         const lvl = (current_row["4"].text) ? 1 : 2;
         const is_milestone = current_row["8"].text === "1" ? true : false;
         let desc = current_row["10"].text || "";  
-        // Добавляем картинку, если есть
-        let img;
-        let img_path = process_image(current_row["10"]);
-        if(typeof img_path !== undefined)
-            img = new ReadStream(process_image(img_path)) 
 
         // Определяемся с темой
         let needed_theme;
@@ -286,7 +281,6 @@ export const importTest = (account: IAccount, table_path: string, module: string
                   lvl,
                   milestone: is_milestone,
                   desc: [desc, ((el) ? el.text : "")].join(" "),
-                  img,
                   answers: answers_moment,
                   correctAnswer
                 }
@@ -328,7 +322,6 @@ export const importTest = (account: IAccount, table_path: string, module: string
                 milestone: is_milestone,
                 desc: desc,
                 answers,
-                img,
                 correctAnswers
               }
             );
