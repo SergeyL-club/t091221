@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs, { ReadStream } from "fs";
 import { Types } from "mongoose";
 import { Modules, ModuleType } from "./models/Module";
 import { ApiError } from "./apiError";
@@ -163,7 +163,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
         }
 
         normalize_table.push(final_row);
-      }
+      }      
 
       // Создание необходимых директорий
       const path_save_tests = path.join(global.GLOBAL_DIR, "tests");
@@ -189,20 +189,33 @@ export const importTest = (account: IAccount, table_path: string, module: string
       // Массив созданных тем
       const created_themes = [];
 
+      // Функция переброса картинки в папку для конкретного теста
+      const process_image = (el: any) => {
+        if (el.image && typeof el.image !== "string") {
+          const image_path = path.join(
+            test_save_media_path,
+            el.image.name
+          );
+          fs.renameSync(el.image.path, image_path);
+          return image_path;
+        }
+        return undefined;
+      }
+
       // Парсим нормализированную таблицу в новый вид
       for (let rId = 0; rId < normalize_table.length; rId++) {
         const current_row = normalize_table[rId];
 
         // Выключаем член, если я устал
-        if(current_row["2"].text)
-          break;
+        if(Object.keys(current_row).length === 0)
+          continue;
 
         // Записываем необходимые данные о вопросе
-        const type = current_row["2"].text;
-        const theme = current_row["3"].text;
+        const type = current_row["2"].text || "";
+        const theme = current_row["3"].text || "";
         const lvl = (current_row["4"].text) ? 1 : 2;
         const is_milestone = current_row["8"].text === "1" ? true : false;
-        let desc = current_row["10"].text;
+        let desc = current_row["10"].text || "";  
 
         // Определяемся с темой
         let needed_theme;
@@ -225,19 +238,6 @@ export const importTest = (account: IAccount, table_path: string, module: string
         // Индекс начала просчётов
         const column_option_start_index = 11;
 
-        // Функция переброса картинки в папку для конкретного теста
-        const process_image = (el: any) => {
-          if (el.image && typeof el.image !== "string") {
-            const image_path = path.join(
-              test_save_media_path,
-              el.image.name
-            );
-            fs.renameSync(el.image.path, image_path);
-            return image_path;
-          }
-          return undefined;
-        }
-
         // Данные для вопроса
         let answers: any = [];
         let correctAnswers: any = [];
@@ -248,8 +248,11 @@ export const importTest = (account: IAccount, table_path: string, module: string
           // Несколько вариантов вопроса - один правильный ответ
           case QUESTION_TYPES.OO:
             // Ответы
-            for (let elId = column_option_start_index + 1; elId < Object.keys(current_row).length; elId += 2){
+            for (let elId = column_option_start_index + 1; elId < Object.keys(current_row).length + 10; elId += 2){
               const el = current_row[elId.toString()];
+
+              if(typeof el === "undefined")
+                continue;
 
               // Создаём объект ответа
               const answer: IAnswer = {
@@ -262,13 +265,13 @@ export const importTest = (account: IAccount, table_path: string, module: string
             }
             
             // Вопросы
-            for (let elId = column_option_start_index + 1; elId < Object.keys(current_row).length; elId += 2){
+            for (let elId = column_option_start_index; elId < Object.keys(current_row).length; elId += 2){
               // Текущий вопрос
               const el = current_row[elId.toString()];
               // Правильный ответ
               const correctAnswer = answers[question_index];
               // Удалить правильный ответ из копии ответов
-              const answers_moment = Array.from(answers);
+              const answers_moment: any = Array.from(answers);
               delete answers_moment[question_index];
 
               // Добавить вопрос
@@ -278,7 +281,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
                   lvl,
                   milestone: is_milestone,
                   desc: [desc, ((el) ? el.text : "")].join(" "),
-                  answers,
+                  answers: answers_moment,
                   correctAnswer
                 }
               );
@@ -290,13 +293,10 @@ export const importTest = (account: IAccount, table_path: string, module: string
           // Один вопрос - множество правильных ответов
           case QUESTION_TYPES.MO: 
             // Ответы
-            for (let elId = column_option_start_index + 1; elId < Object.keys(current_row).length; elId += 2){
+            for (let elId = column_option_start_index + 1; elId < Object.keys(current_row).length + 10; elId += 2){
               const el = current_row[elId.toString()];
               const right_marker = current_row[(elId-1).toString()];
 
-              console.log(right_marker);
-              console.log(el);
-              
               if(typeof el === "undefined")
                 continue;
 
