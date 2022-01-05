@@ -4,7 +4,7 @@ import fs from "fs";
 import { Response } from "./response";
 import bodyParser from "body-parser";
 import os from "os";
-import express from 'express'
+import express from "express";
 import expressFormData from "express-form-data";
 import path, { resolve } from "path";
 import { connect } from "mongoose";
@@ -38,7 +38,7 @@ const jsonParser = bodyParser.json();
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
 APP.use(urlencodedParser);
 APP.use(jsonParser);
-APP.use("/statics", express.static(resolve(__dirname, "../../statics")))
+APP.use("/statics", express.static(resolve(__dirname, "../../statics")));
 
 // form data
 APP.use(
@@ -55,7 +55,7 @@ APP.use(expressFormData.union());
 const modules = require(path.join(GLOBAL_DIR, "api_funcs"));
 
 // загрузка api в express
-APP.use("/:module/:action", async (req, res, next) => {
+APP.use("/api/:module/:action", async (req, res, next) => {
   if (cluster.isWorker) {
     let data =
       req.method === "GET"
