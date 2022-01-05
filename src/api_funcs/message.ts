@@ -139,6 +139,11 @@ const getMessagesModule = async (
       },
     },
     {
+      $addFields: {
+        isLiked: { $in: [account._id, "$likeIds"] },
+      },
+    },
+    {
       $lookup: {
         from: Users.modelName,
         localField: "authorId",
@@ -150,6 +155,7 @@ const getMessagesModule = async (
       $project: {
         _id: 1,
         desc: 1,
+        isLiked: 1,
         likeCount: 1,
         author: { $arrayElemAt: ["$author", 0] },
       },
@@ -158,6 +164,7 @@ const getMessagesModule = async (
       $project: {
         _id: 1,
         desc: 1,
+        isLiked: 1,
         likeCount: 1,
         "author._id": 1,
         "author.nickname": 1,
