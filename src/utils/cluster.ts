@@ -38,7 +38,7 @@ const jsonParser = bodyParser.json();
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
 APP.use(urlencodedParser);
 APP.use(jsonParser);
-APP.use("/statics", express.static(resolve(__dirname, "../../statics")));
+APP.use("/api/statics", express.static(resolve(__dirname, "../../statics")));
 
 // form data
 APP.use(
