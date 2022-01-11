@@ -435,7 +435,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
       for (let i = 1; i < sheet_data.length; i++) {
         const sheet_row_data = sheet_data[i];
 
-        const lvl = (sheet_row_data["__EMPTY"] > 1) ? -1 : 1;
+        const lvl = (sheet_row_data["__EMPTY"] > 1) ? -1 : 0;
         const name = sheet_row_data["__EMPTY_2"];
         const desc = sheet_row_data["__EMPTY_4"] || "Automatic";
         const key = sheet_row_data["Узлы текущего уровня"];
