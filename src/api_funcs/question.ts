@@ -67,19 +67,17 @@ export const setQuestion = async (
     for (let i = 0; i < data.answers.length; i++) {
       const answer = data.answers[i];
 
-      if(typeof answer === "undefined")
-        continue;
-        
+      if (typeof answer === "undefined") continue;
 
       let newAnswer = new Answers();
       // сохранение картинки в ответе
       if (answer.img) {
         let fileData = await fs.promises.readFile(answer.img);
-        await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnser`), {
+        await fs.promises.mkdir(resolve(__dirname, `../../statics/imgAnswer`), {
           recursive: true,
         });
         await fs.promises.writeFile(
-          resolve(__dirname, `../../statics/imgAnser/${newAnswer._id}.png`),
+          resolve(__dirname, `../../statics/imgAnswer/${newAnswer._id}.png`),
           fileData
         );
         newAnswer.img = `/statics/imgAnswer/${newAnswer._id}.png`;
