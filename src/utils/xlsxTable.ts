@@ -333,6 +333,9 @@ export const importTest = (account: IAccount, table_path: string, module: string
 
         // Добавляем все вопросы в БД
         for(let question of questions) {
+          // Если нет нихуя - иди нахуй, бля
+          if (question.answers.length < 3)
+            continue;
           // Добавляем вопрос в БД
           const setQuestionData: inputSetQuestion = question;
           
