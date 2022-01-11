@@ -401,10 +401,10 @@ export const importTest = (account: IAccount, table_path: string, module: string
  */
  export const importModuleMap = async (account: IAccount, table_path: string, module: string | boolean) => {
   // Определяем имя таблицы
-  let table_name_regex = /^(.*)\/(\w+)\.xlsx$/.exec(table_path);
+  let table_name_regex = /^(.*)[(\/)(\\)](.*)\.(.*)$/.exec(table_path);
   let table_name: string;
   let table_source_path: string;
-  if (table_name_regex?.length === 3) {
+  if (table_name_regex?.length) {
     table_name = table_name_regex[2];
     table_source_path = path.join(
       global.GLOBAL_DIR,
@@ -418,11 +418,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
   if(!fs.existsSync(table_path))
     throw new ApiError(500, "Table path incorrect");
 
-  // Разархивация таблицы как ZIP-архива для извлечения медиа
-  fs.createReadStream(table_path)
-    .pipe(unzip.Extract({ path: table_source_path }))
-    .on("close", async () => {
-      // Читаем Excel файл и берём информацию о первом листе в виде JSON
+  // Читаем Excel файл и берём информацию о первом листе в виде JSON
       const workbook = xlsx.readFile(table_path);
       const sheet_name_list = workbook.SheetNames;
       const sheet_data = xlsx.utils.sheet_to_json(
@@ -453,8 +449,7 @@ export const importTest = (account: IAccount, table_path: string, module: string
           const parentId = created_modules[sheet_row_data["Родитель"]];
           await toggleConChild(account, <inputToggleConChilds>{parentId, childId: created_modules[key]});
         }
-      }   
-    });
+      }  
 }
 
 module.exports = {

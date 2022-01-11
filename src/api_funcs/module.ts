@@ -39,9 +39,9 @@ export const setModule = async (account: IAccount, data: inputSetModule) => {
   if (typeof data.questionIds === "string") {
     data.questionIds = JSON.parse(data.questionIds);
   }
-  if (!data.lvl) {
+  if (typeof data.lvl === "undefined") {
     data.lvl = -1;
-  }
+  } 
 
   // проверка заданий
   let questionIds = [];
