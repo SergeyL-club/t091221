@@ -30,10 +30,10 @@ const QUESTION_TYPES = {
  */
 export const importTest = (account: IAccount, table_path: string, module: string | boolean) => {
   // Определяем имя таблицы
-  let table_name_regex = /^(.*)\/(\w+)\.xlsx$/.exec(table_path);
+  let table_name_regex = /^(.*)[(\/)(\\)](.*)\.(.*)$/.exec(table_path);
   let table_name: string;
   let table_source_path: string;
-  if (table_name_regex?.length === 3) {
+  if (table_name_regex?.length) {
     table_name = table_name_regex[2];
     table_source_path = path.join(
       global.GLOBAL_DIR,
@@ -43,16 +43,16 @@ export const importTest = (account: IAccount, table_path: string, module: string
   } else {
     throw new ApiError(500, "Table haven't name");
   }
-
+  
   if(!fs.existsSync(table_path))
-    throw new ApiError(500, "Table path incorrect");
+        throw new ApiError(500, "Table path incorrect");
 
   // Разархивация таблицы как ZIP-архива для извлечения медиа
   fs.createReadStream(table_path)
     .pipe(unzip.Extract({ path: table_source_path }))
     .on("close", async () => {
       // Читаем Excel файл и берём информацию о первом листе в виде JSON
-      const workbook = xlsx.readFile(table_path);
+      const workbook = xlsx.readFileSync(table_path);
       const sheet_name_list = workbook.SheetNames;
       const sheet_data = xlsx.utils.sheet_to_json(
         workbook.Sheets[sheet_name_list[0]]
@@ -334,8 +334,9 @@ export const importTest = (account: IAccount, table_path: string, module: string
         // Добавляем все вопросы в БД
         for(let question of questions) {
           // Если нет нихуя - иди нахуй, бля
-          if (question.answers.length < 3)
+          if (question.answers.length < 3) {
             continue;
+          }
           // Добавляем вопрос в БД
           const setQuestionData: inputSetQuestion = question;
           
@@ -403,56 +404,41 @@ export const importTest = (account: IAccount, table_path: string, module: string
  * @param module
  */
  export const importModuleMap = async (account: IAccount, table_path: string, module: string | boolean) => {
-  // Определяем имя таблицы
-  let table_name_regex = /^(.*)[(\/)(\\)](.*)\.(.*)$/.exec(table_path);
-  let table_name: string;
-  let table_source_path: string;
-  if (table_name_regex?.length) {
-    table_name = table_name_regex[2];
-    table_source_path = path.join(
-      global.GLOBAL_DIR,
-      "tmp",
-      `${table_name}_source`
-    );
-  } else {
-    throw new ApiError(500, "Table haven't name");
-  }
-
   if(!fs.existsSync(table_path))
     throw new ApiError(500, "Table path incorrect");
 
   // Читаем Excel файл и берём информацию о первом листе в виде JSON
-      const workbook = xlsx.readFile(table_path);
-      const sheet_name_list = workbook.SheetNames;
-      const sheet_data = xlsx.utils.sheet_to_json(
-        workbook.Sheets[sheet_name_list[0]]
-      );
+  const workbook = xlsx.readFile(table_path);
+  const sheet_name_list = workbook.SheetNames;
+  const sheet_data = xlsx.utils.sheet_to_json(
+    workbook.Sheets[sheet_name_list[0]]
+  );
 
-      // Созданные модули
-      const created_modules = <any>{};
+  // Созданные модули
+  const created_modules = <any>{};
 
-      for (let i = 1; i < sheet_data.length; i++) {
-        const sheet_row_data = sheet_data[i];
+  for (let i = 1; i < sheet_data.length; i++) {
+    const sheet_row_data = sheet_data[i];
 
-        const lvl = (sheet_row_data["__EMPTY"] > 1) ? -1 : 0;
-        const name = sheet_row_data["__EMPTY_2"];
-        const desc = sheet_row_data["__EMPTY_4"] || "Automatic";
-        const key = sheet_row_data["Узлы текущего уровня"];
+    const lvl = (sheet_row_data["__EMPTY"] > 1) ? -1 : 0;
+    const name = sheet_row_data["__EMPTY_2"];
+    const desc = sheet_row_data["__EMPTY_4"] || "Automatic";
+    const key = sheet_row_data["Узлы текущего уровня"];
 
-        // Создаём или получаем текущий модуль
-        let module;
-        if (!(module = await Modules.findOne({ name: name })))
-          module = await setModule(account, <inputSetModule>{ name, desc, lvl });
-        
-        // Заносим в наш массив
-        created_modules[key] = ("newModule" in module) ? module.newModule._id : module._id;
+    // Создаём или получаем текущий модуль
+    let module;
+    if (!(module = await Modules.findOne({ name: name })))
+      module = await setModule(account, <inputSetModule>{ name, desc, lvl });
+    
+    // Заносим в наш массив
+    created_modules[key] = ("newModule" in module) ? module.newModule._id : module._id;
 
-        // Прикрепляем к родителю
-        if (lvl === -1) {
-          const parentId = created_modules[sheet_row_data["Родитель"]];
-          await toggleConChild(account, <inputToggleConChilds>{parentId, childId: created_modules[key]});
-        }
-      }  
+    // Прикрепляем к родителю
+    if (lvl === -1) {
+      const parentId = created_modules[sheet_row_data["Родитель"]];
+      await toggleConChild(account, <inputToggleConChilds>{parentId, childId: created_modules[key]});
+    }
+  }  
 }
 
 module.exports = {
