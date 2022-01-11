@@ -44,10 +44,10 @@ export const importTest = (
   module: string | boolean
 ) => {
   // Определяем имя таблицы
-  let table_name_regex = /^(.*)\/(\w+)\.xlsx$/.exec(table_path);
+  let table_name_regex = /^(.*)[(\/)(\\)](.*)\.(.*)$/.exec(table_path);
   let table_name: string;
   let table_source_path: string;
-  if (table_name_regex?.length === 3) {
+  if (table_name_regex?.length) {
     table_name = table_name_regex[2];
     table_source_path = path.join(
       global.GLOBAL_DIR,
@@ -66,7 +66,7 @@ export const importTest = (
     .pipe(unzip.Extract({ path: table_source_path }))
     .on("close", async () => {
       // Читаем Excel файл и берём информацию о первом листе в виде JSON
-      const workbook = xlsx.readFile(table_path);
+      const workbook = xlsx.readFileSync(table_path);
       const sheet_name_list = workbook.SheetNames;
       const sheet_data = xlsx.utils.sheet_to_json(
         workbook.Sheets[sheet_name_list[0]]
@@ -435,21 +435,6 @@ export const importModuleMap = async (
   table_path: string,
   module: string | boolean
 ) => {
-  // Определяем имя таблицы
-  let table_name_regex = /^(.*)[(\/)(\\)](.*)\.(.*)$/.exec(table_path);
-  let table_name: string;
-  let table_source_path: string;
-  if (table_name_regex?.length) {
-    table_name = table_name_regex[2];
-    table_source_path = path.join(
-      global.GLOBAL_DIR,
-      "tmp",
-      `${table_name}_source`
-    );
-  } else {
-    throw new ApiError(500, "Table haven't name");
-  }
-
   if (!fs.existsSync(table_path))
     throw new ApiError(500, "Table path incorrect");
 
