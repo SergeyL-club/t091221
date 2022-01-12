@@ -65,16 +65,41 @@ NewSchema.post("save", async (doc: UserType) => {
       });
     }
   }
+  const candidateModules = await Modules.find({});
+
+  for (let i = 0; i < candidateModules.length; i++) {
+    const candidateModule = candidateModules[i];
+    await candidateModule.update({
+      $addToSet: {
+        accountWNA: doc._id,
+      },
+    });
+  }
 });
 
 // удаление всех достижений пользователя
-NewSchema.pre("deleteOne", { document: true, query: false }, async function (
-  next
-) {
-  await AchievementAccounts.deleteMany({
-    accountId: this._id,
-  });
-});
+NewSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    await AchievementAccounts.deleteMany({
+      accountId: this._id,
+    });
+    const candidateModules = await Modules.find({
+      accountWNA: { $in: this._id },
+    });
+
+    for (let i = 0; i < candidateModules.length; i++) {
+      const candidateModule = candidateModules[i];
+      await candidateModule.update({
+        $pull: {
+          accountWNA: this._id,
+        },
+      });
+    }
+    next();
+  }
+);
 
 // экспорт самой модели
 export const Users: UserModel = <UserModel>model(EModels.users, NewSchema);
