@@ -399,7 +399,8 @@ interface studentItem {
     middleName: string,
     lastName: string,
   },
-  mail: string
+  mail: string,
+  classId?: string
 }
 interface generateStudentsRes {
   classId: string,
@@ -454,7 +455,8 @@ const generateStudents = async(account: IAccount, data: generateStudentsReq): Pr
           middleName: item.middleName,
           lastName: item.lastName,
         },
-        mail: item.mail
+        mail: item.mail,
+        classId: data.classId
       }
     );
     
