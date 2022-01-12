@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { ApiError } from "../utils/apiError";
 import { logger } from "../utils/logger";
 import { Classes } from "../utils/models/Class";
+import { Modules } from "../utils/models/Module";
 import { Users } from "../utils/models/User";
 import { IAccount } from "./interfaces";
 
@@ -164,10 +165,148 @@ const getUsersClass = async (account: IAccount, data: inputGetAllUserClass) => {
   return { users };
 };
 
+// интерфейс input удаление запрета на модуль
+interface inputRemWNA {
+  classId: string;
+  moduleIds: string | Array<string>;
+}
+
+// функция проверки всех параметров input
+const instanceOfIRWNA = (object: any): object is inputRemWNA => {
+  return "classId" in object && "moduleIds" in object;
+};
+
+// api регистрации класса
+const remWNA = async (account: IAccount, data: inputRemClass) => {
+  // проверки
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
+  }
+  if (!data || !instanceOfIRWNA(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+  if (!(await Classes.findOne({ _id: new Types.ObjectId(data.classId) }))) {
+    throw new ApiError(400, `Class undefined`);
+  }
+  if (typeof data.moduleIds === "string") {
+    try {
+      data.moduleIds = JSON.parse(data.moduleIds);
+    } catch (e) {
+      throw new ApiError(409, `Error convert string array moduleIds`);
+    }
+  }
+
+  // список пользователей класса
+  const accountsClass = await Users.find({
+    classId: new Types.ObjectId(data.classId),
+  });
+  let accountIdsClass: Array<Types.ObjectId> = [];
+  for (let i = 0; i < accountsClass.length; i++) {
+    const account = accountsClass[i];
+    accountIdsClass.push(account._id);
+  }
+
+  //  удаление запрета
+  const modulesUndefined = [];
+  for (let i = 0; i < data.moduleIds.length; i++) {
+    const moduleId = data.moduleIds[i];
+
+    const candidateModule = await Modules.findOne({
+      _id: new Types.ObjectId(moduleId),
+    });
+    if (!candidateModule) {
+      modulesUndefined.push(candidateModule);
+      continue;
+    }
+
+    await candidateModule.update({
+      $pullAll: {
+        accountWNA: accountIdsClass,
+      },
+    });
+  }
+
+  return {
+    Ok: true,
+    modulesUndefined,
+    accountIdsClass,
+  };
+};
+
+// интерфейс input удаление запрета на модуль
+interface inputSetWNA {
+  classId: string;
+  moduleIds: string | Array<string>;
+}
+
+// функция проверки всех параметров input
+const instanceOfISWNA = (object: any): object is inputSetWNA => {
+  return "classId" in object && "moduleIds" in object;
+};
+
+// api регистрации класса
+const setWNA = async (account: IAccount, data: inputRemClass) => {
+  // проверки
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
+  }
+  if (!data || !instanceOfIRWNA(data)) {
+    throw new ApiError(400, `Not enough input`);
+  }
+  if (!(await Classes.findOne({ _id: new Types.ObjectId(data.classId) }))) {
+    throw new ApiError(400, `Class undefined`);
+  }
+  if (typeof data.moduleIds === "string") {
+    try {
+      data.moduleIds = JSON.parse(data.moduleIds);
+    } catch (e) {
+      throw new ApiError(409, `Error convert string array moduleIds`);
+    }
+  }
+
+  // список пользователей класса
+  const accountsClass = await Users.find({
+    classId: new Types.ObjectId(data.classId),
+  });
+  let accountIdsClass: Array<Types.ObjectId> = [];
+  for (let i = 0; i < accountsClass.length; i++) {
+    const account = accountsClass[i];
+    accountIdsClass.push(account._id);
+  }
+
+  //  удаление запрета
+  const modulesUndefined = [];
+  for (let i = 0; i < data.moduleIds.length; i++) {
+    const moduleId = data.moduleIds[i];
+
+    const candidateModule = await Modules.findOne({
+      _id: new Types.ObjectId(moduleId),
+    });
+    if (!candidateModule) {
+      modulesUndefined.push(candidateModule);
+      continue;
+    }
+
+    await candidateModule.update({
+      $addToSet: {
+        accountWNA: accountIdsClass,
+      },
+    });
+  }
+
+  return {
+    Ok: true,
+    modulesUndefined,
+    accountIdsClass,
+  };
+};
+
 // экспорт api функций
 module.exports = {
   setClass,
   remClass,
   getUsersClass,
   getAllClass,
+  remWNA,
+  setWNA,
 };
