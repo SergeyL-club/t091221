@@ -41,7 +41,7 @@ export const setModule = async (account: IAccount, data: inputSetModule) => {
   }
   if (typeof data.lvl === "undefined") {
     data.lvl = -1;
-  } 
+  }
 
   // проверка заданий
   let questionIds = [];
@@ -109,10 +109,13 @@ export const setModule = async (account: IAccount, data: inputSetModule) => {
 // api получение всех предметов
 const getAllCharter = async (account: IAccount, data: undefined) => {
   // запрос на все предметы
+  console.log(account._id);
+
   const modules = await Modules.aggregate([
     {
       $match: {
         lvl: 0,
+        accountWNA: { $nin: [account._id] },
       },
     },
     {
@@ -151,6 +154,7 @@ const getAllChild = async (account: IAccount, data: inputGetChilds) => {
     {
       $match: {
         _id: new Types.ObjectId(data.parent),
+        accountWNA: { $nin: [account._id] },
       },
     },
     {
