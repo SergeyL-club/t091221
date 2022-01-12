@@ -213,15 +213,33 @@ NewSchema.post("save", async (doc: ModuleType) => {
 });
 
 // при удалении модуля, если это предмет (lvl = 0), удаление у всех клиентов
-NewSchema.pre("deleteOne", { document: true, query: false }, async function (
-  next
-) {
-  if (this.lvl === 0) {
-    console.log(this._id);
-    await AchievementAccounts.deleteMany({
-      moduleId: this._id,
-    });
+NewSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    if (this.lvl === 0) {
+      console.log(this._id);
+      await AchievementAccounts.deleteMany({
+        moduleId: this._id,
+      });
+    }
+    next();
   }
+);
+
+// полный запрет
+NewSchema.pre("save", { document: true, query: false }, async function (next) {
+  const candidates = await Users.find({});
+
+  for (let i = 0; i < candidates.length; i++) {
+    const candidate = candidates[i];
+    if (this.accountWNA) {
+      this.accountWNA.push(candidate._id);
+    } else {
+      this.accountWNA = [candidate._id];
+    }
+  }
+
   next();
 });
 
