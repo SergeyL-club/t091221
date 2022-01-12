@@ -45,7 +45,7 @@ conn.once("open", async () => {
           }
         });
       } else if (collection.collectionName === EModels.users) {
-        collection.findOne({ nickname: "german" }).then((result) => {
+        collection.findOne({ nickname: "piton" }).then((result) => {
           if (!result) {
             let role = collections.filter(
               (item) => item.collectionName === EModels.roles
