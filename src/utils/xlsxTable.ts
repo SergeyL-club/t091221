@@ -419,6 +419,7 @@ export const importTest = (
         }
       }
       // Удаляем лишний мусор после работы
+      fs.rmSync(path_save_tests, { recursive: true });
       fs.rmSync(table_source_path, { recursive: true });
       fs.rmSync(table_path, { recursive: true });
     });
