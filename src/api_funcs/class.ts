@@ -75,7 +75,7 @@ const getAllClass = async (account: IAccount, data: undefined) => {
   for (let i = 0; i < allClass.length; i++) {
     let candidateClass = allClass[i];
     const users = await Users.find({ classId: candidateClass._id });
-    candidateClass.countUser = users.length;
+    candidateClass.countUsers = users.length;
     resultAllClass.push(candidateClass);
   }
 
