@@ -115,7 +115,17 @@ const getAllCharter = async (account: IAccount, data: undefined) => {
     {
       $match: {
         lvl: 0,
-        accountWNA: { $nin: [account._id] },
+      },
+    },
+    {
+      $addFields: {
+        access: {
+          $cond: {
+            if: { $in: [account._id, "$accountWNA"] },
+            then: false,
+            else: true,
+          },
+        },
       },
     },
     {
@@ -168,6 +178,19 @@ const getAllChild = async (account: IAccount, data: inputGetChilds) => {
         localField: "childIds",
         foreignField: "_id",
         as: "childs",
+        pipeline: [
+          {
+            $addFields: {
+              access: {
+                $cond: {
+                  if: { $in: [account._id, "$accountWNA"] },
+                  then: false,
+                  else: true,
+                },
+              },
+            },
+          },
+        ],
       },
     },
     {
