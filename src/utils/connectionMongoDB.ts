@@ -53,8 +53,8 @@ conn.once("open", async () => {
             role[0].findOne({ isAdminFun: true }).then((adminRole) => {
               if (adminRole) {
                 collection.insertOne({
-                  nickname: "german",
-                  passwordHash: hashSync("сосичлен228", 7),
+                  nickname: "piton",
+                  passwordHash: hashSync("piton", 7),
                   roleId: adminRole._id,
                   FIO: {
                     firstName: "",
