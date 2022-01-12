@@ -36,6 +36,12 @@ conn.once("open", async () => {
               isAdminFun: true,
               isClientFun: false,
             });
+
+            collection.insertOne({
+              name: "Student",
+              isAdminFun: false,
+              isClientFun: true,
+            });
           }
         });
       } else if (collection.collectionName === EModels.users) {

@@ -355,6 +355,134 @@ const setPassword = async (account: IAccount, data: inputSetPassword) => {
 
 }
 
+/**
+ * Генерация строки на основе введённой
+ * @param symbols 
+ */
+const generateBasedOn = (length = 8, symbols: string = "abcdefghijklmnopqrstuvwxyz1234567890") => {
+  let final = "";
+  for (let i = 0; i < length; i++) {
+    let randSymbol = Math.floor(Math.random() * symbols.length);
+    final += symbols[randSymbol];
+  }
+  return final;
+}
+
+/**
+ * Генерация случайного пароля
+ * @param length 
+ */
+ const generatePassword = (length = 8): string => {
+  return generateBasedOn(length);
+}
+
+/**
+ * Генерирует список студентов из JSON
+ */
+interface generateStudentsReqItem {
+  firstName: string,
+  middleName: string,
+  lastName: string,
+  mail: string
+}
+interface generateStudentsReq {
+  classId: string,
+  list: string
+}
+interface studentItem {
+  nickname: string,
+  passwordHash?: string,
+  password?: string,
+  roleId?: string,
+  FIO: {
+    firstName: string,
+    middleName: string,
+    lastName: string,
+  },
+  mail: string
+}
+interface generateStudentsRes {
+  classId: string,
+  studentsList: Array<studentItem>
+}
+const generateStudentsVerifyData = (object: any): object is generateStudentsReq => {
+  return (
+    "classId" in object &&
+    "list" in object
+  );
+}
+const generateStudents = async(account: IAccount, data: generateStudentsReq): Promise<generateStudentsRes> => {
+  // Валидация входящих данных
+  if (!data || !generateStudentsVerifyData(data))
+    throw new ApiError(400, "Invalid input data");
+  // Проверка прав пользователя
+  if (!account.role.isAdminFun)
+    throw ApiError.forbidden();
+  // Проверяем, есть ли требуемый класс
+  if (!(await Classes.findById(new Types.ObjectId(data.classId))))
+    throw new ApiError(400, "Input classId is incorrect");
+  // Ищем роль студента
+  let studentRole;
+  if (!(studentRole = await Roles.findOne({name: "Student"})))
+    throw new ApiError(500, "Student role missing");
+  // Проверяем валидность JSON списка
+  let listArray: Array<generateStudentsReqItem>;
+  try {
+    listArray = JSON.parse(data.list);
+  } catch (e) {
+    throw new ApiError(400, "Input list invalid (json icorrect, check syntax)");
+  }
+  // Генерируем два массива (один на ответ, другой на запись в коллекцию)
+  const listForDB: Array<studentItem> = [];
+  const listForResponse: Array<studentItem> = [];
+  for (const item of listArray) {
+    // Проверяем, есть человек с таким email
+    if (await Users.findOne({mail: item.mail}))
+      throw new ApiError(400, "Mail already used other user");
+
+    const nickname = generateBasedOn(8, (item.mail.replace("@", "").replace(".", "")));
+    const password = generatePassword();
+
+    // Для базы данных
+    listForDB.push(
+      {
+        nickname,
+        roleId: studentRole._id,
+        passwordHash: hashSync(password, 7),
+        FIO: {
+          firstName: item.firstName,
+          middleName: item.middleName,
+          lastName: item.lastName,
+        },
+        mail: item.mail
+      }
+    );
+    
+    // Для ответа
+    listForResponse.push(
+      {
+        nickname,
+        password: password,
+        FIO: {
+          firstName: item.firstName,
+          middleName: item.middleName,
+          lastName: item.lastName,
+        },
+        mail: item.mail
+      }
+    );
+  }
+
+  // Записываем новых пользователей в бд
+  if (!(await Users.insertMany(listForDB)))
+    throw new ApiError(500, "Write to database failed");
+  
+  return {
+    classId: data.classId,
+    studentsList: listForResponse
+  }
+}
+ 
 // экспорт api функций
 module.exports = {
   registration,
@@ -365,4 +493,5 @@ module.exports = {
   remUser,
   verifyToken,
   registrationByCode,
+  generateStudents,
 };
