@@ -70,8 +70,17 @@ const getAllClass = async (account: IAccount, data: undefined) => {
     },
   ]);
 
+  const resultAllClass = [];
+
+  for (let i = 0; i < allClass.length; i++) {
+    let candidateClass = allClass[i];
+    const users = await Users.find({ classId: candidateClass._id });
+    candidateClass.countUser = users.length;
+    resultAllClass.push(candidateClass);
+  }
+
   // возвращение ответа
-  return { allClass };
+  return { resultAllClass };
 };
 
 // интерфейс input удаление роли
