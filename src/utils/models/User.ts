@@ -77,6 +77,21 @@ NewSchema.post("save", async (doc: UserType) => {
   }
 });
 
+// добавление запретов
+NewSchema.pre("save", { document: true, query: false }, async function (next) {
+  const candidateModules = await Modules.find({});
+
+  for (let i = 0; i < candidateModules.length; i++) {
+    const candidateModule = candidateModules[i];
+    await candidateModule.update({
+      $addToSet: {
+        accountWNA: this._id,
+      },
+    });
+  }
+  next();
+});
+
 // удаление всех достижений пользователя
 NewSchema.pre(
   "deleteOne",
