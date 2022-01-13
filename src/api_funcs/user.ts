@@ -431,7 +431,6 @@ const generateStudents = async(account: IAccount, data: generateStudentsReq): Pr
     throw new ApiError(400, "Input list invalid (json icorrect, check syntax)");
   }
   // Генерируем два массива (один на ответ, другой на запись в коллекцию)
-  const listForDB: Array<studentItem> = [];
   const listForResponse: Array<studentItem> = [];
   for (const item of listArray) {
     // Проверяем, есть человек с таким email
@@ -470,10 +469,6 @@ const generateStudents = async(account: IAccount, data: generateStudentsReq): Pr
       }
     );
   }
-
-  // Записываем новых пользователей в бд
-  if (!(await Users.insertMany(listForDB)))
-    throw new ApiError(500, "Write to database failed");
   
   return {
     classId: data.classId,
