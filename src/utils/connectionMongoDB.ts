@@ -45,44 +45,10 @@ conn.once("open", async () => {
           isClientFun: false,
         });
 
-<<<<<<< HEAD
         await RoleCollection.insertOne({
           name: "Student",
           isAdminFun: false,
           isClientFun: true,
-=======
-            collection.insertOne({
-              name: "Student",
-              isAdminFun: false,
-              isClientFun: true,
-            });
-          }
-        });
-      } else if (collection.collectionName === EModels.users) {
-        collection.findOne({ nickname: "piton" }).then((result) => {
-          if (!result) {
-            let role = collections.filter(
-              (item) => item.collectionName === EModels.roles
-            );
-            role[0].findOne({ isAdminFun: true }).then((adminRole) => {
-              if (adminRole) {
-                collection.insertOne({
-                  nickname: "piton",
-                  passwordHash: hashSync("piton", 7),
-                  roleId: adminRole._id,
-                  FIO: {
-                    firstName: "",
-                    middleName: "",
-                    lastName: "",
-                  },
-                  mail: "admin@mail.ru",
-                  money: 0,
-                  likeMoney: 0,
-                });
-              }
-            });
-          }
->>>>>>> 6847eeedbb44ccb0a9bd685bf97673b663bddf52
         });
       }
 

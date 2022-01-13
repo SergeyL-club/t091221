@@ -391,16 +391,13 @@ interface generateStudentsReq {
 }
 interface studentItem {
   nickname: string,
-  passwordHash?: string,
-  password?: string,
-  roleId?: string,
+  password: string,
   FIO: {
     firstName: string,
     middleName: string,
     lastName: string,
   },
   mail: string,
-  classId?: string
 }
 interface generateStudentsRes {
   classId: string,
@@ -444,8 +441,8 @@ const generateStudents = async(account: IAccount, data: generateStudentsReq): Pr
     const nickname = generateBasedOn(8, (item.mail.replace("@", "").replace(".", "")));
     const password = generatePassword();
 
-    // Для базы данных
-    listForDB.push(
+    // Создаём в базе
+    await Users.create(
       {
         nickname,
         roleId: studentRole._id,
@@ -459,8 +456,7 @@ const generateStudents = async(account: IAccount, data: generateStudentsReq): Pr
         classId: data.classId
       }
     );
-    
-    // Для ответа
+    // Пишем в ответ
     listForResponse.push(
       {
         nickname,
