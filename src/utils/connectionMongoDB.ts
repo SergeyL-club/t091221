@@ -21,9 +21,8 @@ conn.once("open", async () => {
       let collectionsDoneCount = 1;
       const checkResolve = () => {
         collectionsDoneCount++;
-        if(collectionsDoneCount === collections.length)
-          resolve(collections);
-      }
+        if (collectionsDoneCount === collections.length) resolve(collections);
+      };
       // Удаление лишних колекций
       for (const collection of collections) {
         if (!(collection.collectionName in Models)) {
@@ -34,8 +33,12 @@ conn.once("open", async () => {
         checkResolve();
       }
     }).then(async (collections): Promise<void> => {
-      const RoleCollection = collections.filter((item: Collection) => item.collectionName === EModels.roles).pop();
-      const UserCollection = collections.filter((item: Collection) => item.collectionName === EModels.users).pop();
+      const RoleCollection = collections
+        .filter((item: Collection) => item.collectionName === EModels.roles)
+        .pop();
+      const UserCollection = collections
+        .filter((item: Collection) => item.collectionName === EModels.users)
+        .pop();
 
       // Добавляем стандартные роли
       if (!(await RoleCollection.findOne({ isAdminFun: true }))) {
@@ -45,44 +48,10 @@ conn.once("open", async () => {
           isClientFun: false,
         });
 
-<<<<<<< HEAD
         await RoleCollection.insertOne({
           name: "Student",
           isAdminFun: false,
           isClientFun: true,
-=======
-            collection.insertOne({
-              name: "Student",
-              isAdminFun: false,
-              isClientFun: true,
-            });
-          }
-        });
-      } else if (collection.collectionName === EModels.users) {
-        collection.findOne({ nickname: "piton" }).then((result) => {
-          if (!result) {
-            let role = collections.filter(
-              (item) => item.collectionName === EModels.roles
-            );
-            role[0].findOne({ isAdminFun: true }).then((adminRole) => {
-              if (adminRole) {
-                collection.insertOne({
-                  nickname: "piton",
-                  passwordHash: hashSync("piton", 7),
-                  roleId: adminRole._id,
-                  FIO: {
-                    firstName: "",
-                    middleName: "",
-                    lastName: "",
-                  },
-                  mail: "admin@mail.ru",
-                  money: 0,
-                  likeMoney: 0,
-                });
-              }
-            });
-          }
->>>>>>> 6847eeedbb44ccb0a9bd685bf97673b663bddf52
         });
       }
 
