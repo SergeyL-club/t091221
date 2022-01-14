@@ -477,14 +477,20 @@ const generateStudents = async (
 };
 
 // api получение списка пользователей админом
-const adminGetUser = async (account: IAccount, data: undefined) => {
+const getAdminUsers = async (account: IAccount, data: undefined) => {
   // проверки
   if (!account.role.isAdminFun) {
     throw new ApiError(403, `Can't access this request`);
   }
 
+  const clientRole = await Roles.findOne({ name: "Student" });
+
+  if (!clientRole) {
+    throw new ApiError(400, `Student role undefined`);
+  }
+
   return {
-    users: await Users.find({}).lean("-passwordHash"),
+    users: await Users.find({ roleId: clientRole._id }).select("-passwordHash"),
   };
 };
 
@@ -499,4 +505,5 @@ module.exports = {
   verifyToken,
   registrationByCode,
   generateStudents,
+  getAdminUsers,
 };
