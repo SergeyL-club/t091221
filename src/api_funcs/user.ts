@@ -391,16 +391,13 @@ interface generateStudentsReq {
 }
 interface studentItem {
   nickname: string;
-  passwordHash?: string;
-  password?: string;
-  roleId?: string;
+  password: string;
   FIO: {
     firstName: string;
     middleName: string;
     lastName: string;
   };
   mail: string;
-  classId?: string;
 }
 interface generateStudentsRes {
   classId: string;
@@ -435,7 +432,6 @@ const generateStudents = async (
     throw new ApiError(400, "Input list invalid (json icorrect, check syntax)");
   }
   // Генерируем два массива (один на ответ, другой на запись в коллекцию)
-  const listForDB: Array<studentItem> = [];
   const listForResponse: Array<studentItem> = [];
   for (const item of listArray) {
     // Проверяем, есть человек с таким email
@@ -448,8 +444,8 @@ const generateStudents = async (
     );
     const password = generatePassword();
 
-    // Для базы данных
-    listForDB.push({
+    // Создаём в базе
+    await Users.create({
       nickname,
       roleId: studentRole._id,
       passwordHash: hashSync(password, 7),
@@ -461,8 +457,7 @@ const generateStudents = async (
       mail: item.mail,
       classId: data.classId,
     });
-
-    // Для ответа
+    // Пишем в ответ
     listForResponse.push({
       nickname,
       password: password,
@@ -474,10 +469,6 @@ const generateStudents = async (
       mail: item.mail,
     });
   }
-
-  // Записываем новых пользователей в бд
-  if (!(await Users.insertMany(listForDB)))
-    throw new ApiError(500, "Write to database failed");
 
   return {
     classId: data.classId,
