@@ -199,8 +199,7 @@ const registrationByCode = async (
   }
 };
 
-// админское удаление пользователя
-// интерфейс input авторизации
+// интерфейс input удаление пользвателя админом
 interface inputAdminRemUser {
   userId: string;
 }
@@ -280,7 +279,7 @@ const setParamUser = async (account: IAccount, data: inputSetParamUser) => {
     middleName: false,
     lastName: false,
     mail: false,
-    class: false
+    class: false,
   };
   if (data.nickname) {
     candidate.nickname = data.nickname;
@@ -302,7 +301,10 @@ const setParamUser = async (account: IAccount, data: inputSetParamUser) => {
     candidate.mail = data.mail;
     param.mail = true;
   }
-  if (data.classId && await Classes.findOne({ _id: new Types.ObjectId(data.classId) })) {
+  if (
+    data.classId &&
+    (await Classes.findOne({ _id: new Types.ObjectId(data.classId) }))
+  ) {
     candidate.classId = new Types.ObjectId(data.classId);
     param.class = true;
   } else if (typeof data.classId !== "undefined") {
@@ -312,10 +314,9 @@ const setParamUser = async (account: IAccount, data: inputSetParamUser) => {
 
   // сохранение
   if (await candidate.save()) {
-    return { Ok: true, param }
-  } else return { Ok: false }
-
-}
+    return { Ok: true, param };
+  } else return { Ok: false };
+};
 
 // интерфейс input изменение пароля
 interface inputSetPassword {
@@ -325,10 +326,7 @@ interface inputSetPassword {
 
 // функция проверки всех параметров input
 const instanceOfISP = (object: any): object is inputSetPassword => {
-  return (
-    "oldPassword" in object &&
-    "newPassword" in object
-  );
+  return "oldPassword" in object && "newPassword" in object;
 };
 
 // api изменение пароля
@@ -348,83 +346,86 @@ const setPassword = async (account: IAccount, data: inputSetPassword) => {
 
       // сохранение
       if (await candidate.save()) {
-        return { Ok: true, setNewPassword: true }
-      } else return { Ok: false }
+        return { Ok: true, setNewPassword: true };
+      } else return { Ok: false };
     } else throw new ApiError(409, `No verify old password`);
   }
-
-}
+};
 
 /**
  * Генерация строки на основе введённой
- * @param symbols 
+ * @param symbols
  */
-const generateBasedOn = (length = 8, symbols: string = "abcdefghijklmnopqrstuvwxyz1234567890") => {
+const generateBasedOn = (
+  length = 8,
+  symbols: string = "abcdefghijklmnopqrstuvwxyz1234567890"
+) => {
   let final = "";
   for (let i = 0; i < length; i++) {
     let randSymbol = Math.floor(Math.random() * symbols.length);
     final += symbols[randSymbol];
   }
   return final;
-}
+};
 
 /**
  * Генерация случайного пароля
- * @param length 
+ * @param length
  */
- const generatePassword = (length = 8): string => {
+const generatePassword = (length = 8): string => {
   return generateBasedOn(length);
-}
+};
 
 /**
  * Генерирует список студентов из JSON
  */
 interface generateStudentsReqItem {
-  firstName: string,
-  middleName: string,
-  lastName: string,
-  mail: string
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  mail: string;
 }
 interface generateStudentsReq {
-  classId: string,
-  list: string
+  classId: string;
+  list: string;
 }
 interface studentItem {
-  nickname: string,
-  passwordHash?: string,
-  password?: string,
-  roleId?: string,
+  nickname: string;
+  passwordHash?: string;
+  password?: string;
+  roleId?: string;
   FIO: {
-    firstName: string,
-    middleName: string,
-    lastName: string,
-  },
-  mail: string,
-  classId?: string
+    firstName: string;
+    middleName: string;
+    lastName: string;
+  };
+  mail: string;
+  classId?: string;
 }
 interface generateStudentsRes {
-  classId: string,
-  studentsList: Array<studentItem>
+  classId: string;
+  studentsList: Array<studentItem>;
 }
-const generateStudentsVerifyData = (object: any): object is generateStudentsReq => {
-  return (
-    "classId" in object &&
-    "list" in object
-  );
-}
-const generateStudents = async(account: IAccount, data: generateStudentsReq): Promise<generateStudentsRes> => {
+const generateStudentsVerifyData = (
+  object: any
+): object is generateStudentsReq => {
+  return "classId" in object && "list" in object;
+};
+const generateStudents = async (
+  account: IAccount,
+  data: generateStudentsReq
+): Promise<generateStudentsRes> => {
   // Валидация входящих данных
   if (!data || !generateStudentsVerifyData(data))
     throw new ApiError(400, "Invalid input data");
   // Проверка прав пользователя
-  if (!account.role.isAdminFun)
-    throw ApiError.forbidden();
+  if (!account.role.isAdminFun) throw ApiError.forbidden();
   // Проверяем, есть ли требуемый класс
   if (!(await Classes.findById(new Types.ObjectId(data.classId))))
     throw new ApiError(400, "Input classId is incorrect");
   // Ищем роль студента
   let studentRole;
-  if (!(studentRole = await Roles.findOne({name: "Student"})))
+  if (!(studentRole = await Roles.findOne({ name: "Student" })))
     throw new ApiError(500, "Student role missing");
   // Проверяем валидность JSON списка
   let listArray: Array<generateStudentsReqItem>;
@@ -438,53 +439,64 @@ const generateStudents = async(account: IAccount, data: generateStudentsReq): Pr
   const listForResponse: Array<studentItem> = [];
   for (const item of listArray) {
     // Проверяем, есть человек с таким email
-    if (await Users.findOne({mail: item.mail}))
+    if (await Users.findOne({ mail: item.mail }))
       throw new ApiError(400, "Mail already used other user");
 
-    const nickname = generateBasedOn(8, (item.mail.replace("@", "").replace(".", "")));
+    const nickname = generateBasedOn(
+      8,
+      item.mail.replace("@", "").replace(".", "")
+    );
     const password = generatePassword();
 
     // Для базы данных
-    listForDB.push(
-      {
-        nickname,
-        roleId: studentRole._id,
-        passwordHash: hashSync(password, 7),
-        FIO: {
-          firstName: item.firstName,
-          middleName: item.middleName,
-          lastName: item.lastName,
-        },
-        mail: item.mail,
-        classId: data.classId
-      }
-    );
-    
+    listForDB.push({
+      nickname,
+      roleId: studentRole._id,
+      passwordHash: hashSync(password, 7),
+      FIO: {
+        firstName: item.firstName,
+        middleName: item.middleName,
+        lastName: item.lastName,
+      },
+      mail: item.mail,
+      classId: data.classId,
+    });
+
     // Для ответа
-    listForResponse.push(
-      {
-        nickname,
-        password: password,
-        FIO: {
-          firstName: item.firstName,
-          middleName: item.middleName,
-          lastName: item.lastName,
-        },
-        mail: item.mail
-      }
-    );
+    listForResponse.push({
+      nickname,
+      password: password,
+      FIO: {
+        firstName: item.firstName,
+        middleName: item.middleName,
+        lastName: item.lastName,
+      },
+      mail: item.mail,
+    });
   }
 
   // Записываем новых пользователей в бд
   if (!(await Users.insertMany(listForDB)))
     throw new ApiError(500, "Write to database failed");
-  
+
   return {
     classId: data.classId,
-    studentsList: listForResponse
+    studentsList: listForResponse,
+  };
+};
+
+// api получение списка пользователей админом
+const adminGetUser = async (account: IAccount, data: undefined) => {
+  // проверки
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
   }
-}
- 
+
+  return {
+    users: await Users.find({}).lean("-passwordHash"),
+  };
+};
+
 // экспорт api функций
 module.exports = {
   registration,
