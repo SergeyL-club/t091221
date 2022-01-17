@@ -22,6 +22,8 @@ const xlsx = require("xlsx");
 const unzip = require("unzipper");
 const { XMLParser } = require("fast-xml-parser");
 
+import ExcelJS from "exceljs";
+
 /**
  * Types of questions
  */
@@ -439,28 +441,31 @@ export const importModuleMap = async (
   if (!fs.existsSync(table_path))
     throw new ApiError(500, "Table path incorrect");
 
-  // Читаем Excel файл и берём информацию о первом листе в виде JSON
-  const workbook = xlsx.readFile(table_path);
-  const sheet_name_list = workbook.SheetNames;
-  const sheet_data = xlsx.utils.sheet_to_json(
-    workbook.Sheets[sheet_name_list[0]]
-  );
-
   // Созданные модули
   const created_modules = <any>{};
 
-  for (let i = 1; i < sheet_data.length; i++) {
-    const sheet_row_data = sheet_data[i];
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(table_path);
 
-    const lvl = sheet_row_data["__EMPTY"] > 1 ? -1 : 0;
-    const name = sheet_row_data["__EMPTY_2"];
-    const desc = sheet_row_data["__EMPTY_4"] || "Automatic";
-    const key = sheet_row_data["Узлы текущего уровня"];
+  const worksheet = workbook.getWorksheet(1);
+  for (let i = 3; i < worksheet.rowCount; i++) {
+    const row = worksheet.getRow(i);
+
+    const lvl = <any>row.getCell(1).value > 1 ? -1 : 0;
+    const parentKey = <any>row.getCell(2).value?.toString();
+    const key = <any>row.getCell(4).value?.toString();
+    const name = <any>row.getCell(5).value;
+    const weight = <any>row.getCell(6).value;
+    const type = <any>row.getCell(7).value || "Automatic";
+
+    // Пропускаем строчку, если она пустая
+    if (!key || !name || weight?.result === 1)
+      continue;
 
     // Создаём или получаем текущий модуль
     let module;
     if (!(module = await Modules.findOne({ name: name })))
-      module = await setModule(account, <inputSetModule>{ name, desc, lvl });
+      module = await setModule(account, <inputSetModule>{ name, desc: type, lvl });
 
     // Заносим в наш массив
     created_modules[key] =
@@ -468,7 +473,7 @@ export const importModuleMap = async (
 
     // Прикрепляем к родителю
     if (lvl === -1) {
-      const parentId = created_modules[sheet_row_data["Родитель"]];
+      const parentId = created_modules[parentKey];
       await toggleConChild(account, <inputToggleConChilds>{
         parentId,
         childId: created_modules[key],
