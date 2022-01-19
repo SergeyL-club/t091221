@@ -4,6 +4,7 @@ import { EModels } from "./enumModels";
 // интерфейс question
 export interface IQuestion {
   desc: string;
+  descImg?: string;
   lvl: number;
   type: string;
   img?: Array<string>;
@@ -13,10 +14,10 @@ export interface IQuestion {
 }
 
 // расширенный тип
-interface QuestionType extends IQuestion, Document { }
+interface QuestionType extends IQuestion, Document {}
 
 // интерфейс модели
-interface QuestionModule extends Model<QuestionType> { }
+interface QuestionModule extends Model<QuestionType> {}
 
 // список типов
 export enum ETypeQuestion {
@@ -28,6 +29,7 @@ export enum ETypeQuestion {
 const NewSchema = new Schema<QuestionType, QuestionModule, QuestionType>({
   desc: { type: String, required: true },
   lvl: { type: Number, required: true, default: 0 },
+  descImg: { type: String },
   img: [{ type: String }],
   type: { type: String, required: true, enum: ETypeQuestion },
   answerIds: [{ type: Schema.Types.ObjectId, ref: EModels.answers }],

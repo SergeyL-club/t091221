@@ -6,13 +6,14 @@ import { ETypeQuestion, Questions } from "../utils/models/Question";
 import { IAccount } from "./interfaces";
 import fs, { ReadStream } from "fs";
 import { resolve } from "path";
-import { type } from "os";
+import { logger } from "../utils/logger";
 
 // интерфейс input регистрации задачи
 export interface inputSetQuestion {
   desc: string;
   lvl: number;
   type: string;
+  descImg?: string | Buffer;
   img?: ReadStream | Array<ReadStream>;
   answers: string | Array<IAnswer>;
   correctAnswer?: string | IAnswer;
@@ -144,6 +145,54 @@ export const setQuestion = async (
   newQuestionDoc.answerIds = answerIds;
   newQuestionDoc.correctAnswerId = correctAnswer ? correctAnswer : undefined;
   newQuestionDoc.correctAnswerIds = correctAnswers ? correctAnswers : undefined;
+
+  // создание картинки описание
+  if (data.descImg) {
+    if (Buffer.isBuffer(data.descImg)) {
+      try {
+        await fs.promises.mkdir(
+          resolve(__dirname, `../../statics/imgQuestion`),
+          {
+            recursive: true,
+          }
+        );
+
+        await fs.promises.writeFile(
+          resolve(
+            __dirname,
+            `../../statics/imgQuestion/${newQuestionDoc._id}.png`
+          ),
+          data.descImg
+        );
+
+        newQuestionDoc.descImg = `/statics/imgQuestion/${newQuestionDoc._id}.png`;
+      } catch (e) {
+        logger.error(e);
+      }
+    } else {
+      try {
+        const buffer = await fs.promises.readFile(data.descImg);
+        await fs.promises.mkdir(
+          resolve(__dirname, `../../statics/imgQuestion`),
+          {
+            recursive: true,
+          }
+        );
+
+        await fs.promises.writeFile(
+          resolve(
+            __dirname,
+            `../../statics/imgQuestion/${newQuestionDoc._id}.png`
+          ),
+          buffer
+        );
+
+        newQuestionDoc.descImg = `/statics/imgQuestion/${newQuestionDoc._id}.png`;
+      } catch (e) {
+        logger.error(e);
+      }
+    }
+  }
 
   // проверка картинки
   if (data.img) {
