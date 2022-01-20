@@ -180,9 +180,24 @@ const toggleConAchievement = async (
   }
 };
 
+//api получение всех достижений
+const getAchievements = async (account: IAccount, data: undefined) => {
+  // проверки
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
+  }
+
+  const achievements = await Achievements.find({});
+
+  return {
+    achievements,
+  };
+};
+
 // экспорт api функций
 module.exports = {
   setAchievement,
   remAchievement,
+  getAchievements,
   toggleConAchievement,
 };
