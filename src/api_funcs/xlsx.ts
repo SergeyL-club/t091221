@@ -1,12 +1,11 @@
 import fs, { ReadStream } from "fs";
 import { ApiError } from "../utils/apiError";
 import { IAccount } from "./interfaces";
-import { importTest, importModuleMap } from "../utils/xlsxTable";
+import { importTest, importTestNew, importModuleMap } from "../utils/xlsxTable";
 
 // интерфейс input загрузка заданий
 interface inputXlsxSetQuestion {
-  xlsx: ReadStream,
-  moduleId?: string
+  xlsx: ReadStream
 }
 
 // функция проверки всех параметров input
@@ -20,10 +19,11 @@ const setQuestions = async (account: IAccount, data: inputXlsxSetQuestion) => {
   if (!account.role.isAdminFun) {
     throw new ApiError(403, `Can't access this request`);
   }  
+  
   if (!data || !instanceOfISXQ(data)) {
     throw new ApiError(400, `Not enough input`);
   }
-
+  
   // парсинг и запись в бд
   if (typeof data.xlsx.path === "string") {
     // получение основных путей
@@ -34,14 +34,8 @@ const setQuestions = async (account: IAccount, data: inputXlsxSetQuestion) => {
       fs.copyFileSync(data.xlsx.path, next_dir)
     }
 
-    // Получаем модуль
-    let module: any = (data.moduleId) ?? false;
-
-    // основная работа
-    await importTest(account, next_dir, module);
-
     // возвращение ответа
-    return { loaded: true };
+    return {loaded: await importTestNew(account, next_dir)};
   } else return { Ok: false };
 };
 
@@ -65,11 +59,8 @@ const setModules = async (account: IAccount, data: inputXlsxSetQuestion) => {
       fs.copyFileSync(data.xlsx.path, next_dir)
     }
 
-    // Получаем модуль
-    let module: any = (data.moduleId) ?? false;
-
     // основная работа
-    await importModuleMap(account, next_dir, module);
+    await importModuleMap(account, next_dir);
 
     // возвращение ответа
     return { loaded: true };
