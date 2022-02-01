@@ -1,11 +1,11 @@
 import fs, { ReadStream } from "fs";
 import { ApiError } from "../utils/apiError";
 import { IAccount } from "./interfaces";
-import { importTest, importTestNew, importModuleMap } from "../utils/xlsxTable";
+import { importTestNew, importModuleMap } from "../utils/xlsxTable";
 
 // интерфейс input загрузка заданий
 interface inputXlsxSetQuestion {
-  xlsx: ReadStream
+  xlsx: ReadStream;
 }
 
 // функция проверки всех параметров input
@@ -18,12 +18,12 @@ const setQuestions = async (account: IAccount, data: inputXlsxSetQuestion) => {
   // проверки
   if (!account.role.isAdminFun) {
     throw new ApiError(403, `Can't access this request`);
-  }  
-  
+  }
+
   if (!data || !instanceOfISXQ(data)) {
     throw new ApiError(400, `Not enough input`);
   }
-  
+
   // парсинг и запись в бд
   if (typeof data.xlsx.path === "string") {
     // получение основных путей
@@ -31,11 +31,11 @@ const setQuestions = async (account: IAccount, data: inputXlsxSetQuestion) => {
     let next_dir = data.xlsx.path;
     if (filename) {
       next_dir = `${global.GLOBAL_DIR}/tmp/${filename[2]}.xlsx`;
-      fs.copyFileSync(data.xlsx.path, next_dir)
+      fs.copyFileSync(data.xlsx.path, next_dir);
     }
 
     // возвращение ответа
-    return {loaded: await importTestNew(account, next_dir)};
+    return { loaded: await importTestNew(account, next_dir) };
   } else return { Ok: false };
 };
 
@@ -44,7 +44,7 @@ const setModules = async (account: IAccount, data: inputXlsxSetQuestion) => {
   // проверки
   if (!account.role.isAdminFun) {
     throw new ApiError(403, `Can't access this request`);
-  }  
+  }
   if (!data || !instanceOfISXQ(data)) {
     throw new ApiError(400, `Not enough input`);
   }
@@ -56,7 +56,7 @@ const setModules = async (account: IAccount, data: inputXlsxSetQuestion) => {
     let next_dir = data.xlsx.path;
     if (filename) {
       next_dir = `${global.GLOBAL_DIR}/tmp/${filename[2]}.xlsx`;
-      fs.copyFileSync(data.xlsx.path, next_dir)
+      fs.copyFileSync(data.xlsx.path, next_dir);
     }
 
     // основная работа
@@ -70,5 +70,5 @@ const setModules = async (account: IAccount, data: inputXlsxSetQuestion) => {
 // экспорт api функций
 module.exports = {
   setQuestions,
-  setModules
+  setModules,
 };
