@@ -17,11 +17,6 @@ import {
 } from "../api_funcs/question";
 import { IAnswer } from "./models/Answer";
 
-const path = require("path");
-const xlsx = require("xlsx");
-const unzip = require("unzipper");
-const { XMLParser } = require("fast-xml-parser");
-
 import ExcelJS from "exceljs";
 
 /**
@@ -113,6 +108,7 @@ export const importTestNew = async(
           // Получаем правильный ответ и массив с неправильными
           const answersCurrent = Array.from(answers);
           const correctAnswerIndex = (i - questionStartIndex);
+          log
           const correctAnswer = answersCurrent[correctAnswerIndex];
           answersCurrent.splice(correctAnswerIndex, 1);
 
