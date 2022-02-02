@@ -108,7 +108,7 @@ export const importTestNew = async(
           // Получаем правильный ответ и массив с неправильными
           const answersCurrent = Array.from(answers);
           const correctAnswerIndex = (i - questionStartIndex);
-          log
+          
           const correctAnswer = answersCurrent[correctAnswerIndex];
           answersCurrent.splice(correctAnswerIndex, 1);
 
