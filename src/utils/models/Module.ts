@@ -1,8 +1,9 @@
 import { model, Schema, Model, Document, Types } from "mongoose";
 import { AchievementAccounts } from "./AchievementAccount";
 import { EModels } from "./enumModels";
+import { ModuleAccounts } from "./ModuleAccount";
 import { Questions } from "./Question";
-import { Roles } from "./Role";
+import { IRole, Roles } from "./Role";
 import { Users } from "./User";
 
 // интерфейс module
@@ -202,6 +203,7 @@ NewSchema.post("save", async (doc: ModuleType) => {
     if (candidates.length > 0) {
       for (let i = 0; i < candidates.length; i++) {
         const candidate = candidates[i];
+
         await AchievementAccounts.create({
           accountId: candidate._id,
           moduleId: doc._id,
@@ -222,6 +224,9 @@ NewSchema.pre(
       await AchievementAccounts.deleteMany({
         moduleId: this._id,
       });
+      await ModuleAccounts.deleteMany({
+        moduleId: this._id,
+      });
     }
     next();
   }
@@ -233,10 +238,21 @@ NewSchema.pre("save", { document: true, query: false }, async function (next) {
 
   for (let i = 0; i < candidates.length; i++) {
     const candidate = candidates[i];
+    const role = await Roles.findOne({
+      _id: new Types.ObjectId(candidate.roleId),
+    });
     if (this.accountWNA) {
       this.accountWNA.push(candidate._id);
     } else {
       this.accountWNA = [candidate._id];
+    }
+    if (role && role.isClientFun) {
+      await ModuleAccounts.create({
+        accountId: candidate._id,
+        moduleId: this._id,
+        progress: 0,
+        correctAnswers: [],
+      });
     }
   }
 

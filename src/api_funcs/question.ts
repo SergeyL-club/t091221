@@ -14,7 +14,6 @@ export interface inputSetQuestion {
   lvl: number;
   type: string;
   descImg?: string | Buffer;
-  img?: ReadStream | Array<ReadStream>;
   answers: string | Array<IAnswer>;
   correctAnswer?: string | IAnswer;
   correctAnswers?: string | Array<IAnswer>;
@@ -194,50 +193,6 @@ export const setQuestion = async (
     }
   }
 
-  // проверка картинки
-  if (data.img) {
-    newQuestionDoc.img = [];
-    // создание репозитория
-    await fs.promises.mkdir(
-      resolve(__dirname, `../../statics/imgQuestion/${newQuestionDoc._id}`),
-      { recursive: true }
-    );
-    if (Array.isArray(data.img)) {
-      for (let i = 0; i < data.img.length; i++) {
-        const imgOne = data.img[i];
-
-        // data
-        let fileContent = await fs.promises.readFile(imgOne.path);
-
-        // save
-        await fs.promises.writeFile(
-          resolve(
-            __dirname,
-            `../../statics/imgQuestion/${newQuestionDoc._id}/img${i}.png`
-          ),
-          fileContent
-        );
-        newQuestionDoc.img.push(
-          `/statics/imgQuestion/${newQuestionDoc._id}/img${i}.png`
-        );
-      }
-    } else {
-      // data
-      let fileContent = await fs.promises.readFile(data.img.path);
-
-      // save
-      await fs.promises.writeFile(
-        resolve(
-          __dirname,
-          `../../statics/imgQuestion/${newQuestionDoc._id}/img1.png`
-        ),
-        fileContent
-      );
-      newQuestionDoc.img.push(
-        `/statics/imgQuestion/${newQuestionDoc._id}/img1.png`
-      );
-    }
-  }
   if (!(await newQuestionDoc.save())) {
     // если произошла ошибка
     throw new ApiError(400, `Save question error`);
@@ -305,11 +260,10 @@ const remQuestion = async (account: IAccount, data: inputRemQuestion) => {
   });
 
   // удаление картинки
-  if (questionDel && questionDel.img) {
+  if (questionDel && questionDel.descImg) {
     try {
-      await fs.promises.rmdir(
-        resolve(__dirname, `../../statics/imgQuestion/${questionDel._id}`),
-        { recursive: true }
+      await fs.promises.unlink(
+        resolve(__dirname, `../../statics/imgQuestion/${questionDel._id}.png`)
       );
     } catch (e) {
       return;

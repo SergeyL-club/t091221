@@ -2,6 +2,7 @@ import { model, Schema, Model, Document, Types } from "mongoose";
 import { AchievementAccounts } from "./AchievementAccount";
 import { EModels } from "./enumModels";
 import { Modules } from "./Module";
+import { ModuleAccounts } from "./ModuleAccount";
 
 // глобальные константы
 type ObjectId = Schema.Types.ObjectId;
@@ -74,6 +75,12 @@ NewSchema.post("save", async (doc: UserType) => {
         accountWNA: doc._id,
       },
     });
+    await ModuleAccounts.create({
+      accountId: doc._id,
+      moduleId: candidateModule._id,
+      progress: 0,
+      correctAnswers: [],
+    });
   }
 });
 
@@ -102,6 +109,10 @@ NewSchema.pre(
     });
     const candidateModules = await Modules.find({
       accountWNA: { $in: this._id },
+    });
+
+    await ModuleAccounts.deleteMany({
+      accountId: this._id,
     });
 
     for (let i = 0; i < candidateModules.length; i++) {

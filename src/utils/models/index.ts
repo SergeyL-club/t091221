@@ -10,3 +10,4 @@ exports[EModels.messages] = require("./Message");
 exports[EModels.achievements] = require("./Achievement");
 exports[EModels.achievementAccounts] = require("./AchievementAccount");
 exports[EModels.tests] = require("./Test");
+exports[EModels.moduleAccounts] = require("./ModuleAccount");

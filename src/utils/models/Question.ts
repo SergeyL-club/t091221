@@ -7,7 +7,6 @@ export interface IQuestion {
   descImg?: string;
   lvl: number;
   type: string;
-  img?: Array<string>;
   answerIds: Array<Schema.Types.ObjectId>;
   correctAnswerId?: Schema.Types.ObjectId;
   correctAnswerIds?: Array<Schema.Types.ObjectId>;
@@ -30,7 +29,6 @@ const NewSchema = new Schema<QuestionType, QuestionModule, QuestionType>({
   desc: { type: String, required: true },
   lvl: { type: Number, required: true, default: 0 },
   descImg: { type: String },
-  img: [{ type: String }],
   type: { type: String, required: true, enum: ETypeQuestion },
   answerIds: [{ type: Schema.Types.ObjectId, ref: EModels.answers }],
   correctAnswerId: { type: Schema.Types.ObjectId, ref: EModels.answers },
