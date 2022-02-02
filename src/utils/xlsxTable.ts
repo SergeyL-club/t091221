@@ -121,7 +121,7 @@ export const importTestNew = async(
               type,
               lvl,
               desc: [desc, questionText].join(" "), 
-              descImg: descImg ?? questionImage,
+              descImg: descImg?.buffer ?? questionImage?.buffer,
               answers: answersCurrent,
               correctAnswer
             }
@@ -155,7 +155,7 @@ export const importTestNew = async(
             type,
             lvl,
             desc,
-            descImg: descImg,
+            descImg: descImg?.buffer,
             answers: answers,
             correctAnswers
           }
