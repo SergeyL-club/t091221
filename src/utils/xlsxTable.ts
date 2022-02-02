@@ -96,6 +96,7 @@ export const importTestNew = async(
           answers.push({desc: answerText, img: answerImage});
         }
 
+        let correctIndex = 0;
         // Перебираем все вопросы
         for (let i = questionStartIndex; i < 20; i+=2) {
           // Получаем вопрос или пропускам
@@ -106,11 +107,9 @@ export const importTestNew = async(
           const questionImage = getImage(questionCell.row, questionCell.col);
 
           // Получаем правильный ответ и массив с неправильными
-          const answersCurrent = Array.from(answers);
-          const correctAnswerIndex = (i - questionStartIndex);
-          
-          const correctAnswer = answersCurrent[correctAnswerIndex];
-          answersCurrent.splice(correctAnswerIndex, 1);
+          const answersCurrent = Array.from(answers);          
+          const correctAnswer = answersCurrent[correctIndex];
+          answersCurrent.splice(correctIndex, 1);
 
           questions.push(
             {
@@ -122,6 +121,8 @@ export const importTestNew = async(
               correctAnswer
             }
           );
+
+          correctIndex++;
         }
         break;
       case QuestionTypes.manyCorrect:
