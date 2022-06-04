@@ -1,10 +1,11 @@
 import { ApiError } from "../utils/apiError";
-import { Modules } from "../utils/models/Module";
+import { Modules, ModuleType } from "../utils/models/Module";
 import { IAccount } from "./interfaces";
 import { Types } from "mongoose";
 import { Questions } from "../utils/models/Question";
 import { logger } from "../utils/logger";
 import { Users } from "../utils/models/User";
+import { ModuleAccounts } from "../utils/models/ModuleAccount";
 
 // интерфейс input регистрации модуля
 export interface inputSetModule {
@@ -199,6 +200,39 @@ const getAllChild = async (account: IAccount, data: inputGetChilds) => {
       },
     },
   ]);
+
+  let candidateModule = await ModuleAccounts.findOne({
+    moduleId: moduleChilds[0]._id,
+  });
+  if (candidateModule && candidateModule.correctAnswers) {
+    moduleChilds[0].progress = {
+      max: moduleChilds[0].questionIds.length,
+      count: candidateModule.correctAnswers.length,
+    };
+  } else {
+    moduleChilds[0].progress = {
+      max: moduleChilds[0].questionIds.length,
+      count: 0,
+    };
+  }
+
+  for (let i = 0; i < moduleChilds[0].childs.length; i++) {
+    const child: ModuleType = moduleChilds[0].childs[i];
+    let candidateModule = await ModuleAccounts.findOne({
+      moduleId: child._id,
+    });
+    if (candidateModule && candidateModule.correctAnswers) {
+      moduleChilds[0].childs[i].progress = {
+        max: moduleChilds[0].childs[i].questionIds.length,
+        count: candidateModule.correctAnswers.length,
+      };
+    } else {
+       moduleChilds[0].childs[i].progress = {
+         max: moduleChilds[0].childs[i].questionIds.length,
+         count: 0,
+       };
+    }     
+  }
 
   // возвращение ответа
   return { module: moduleChilds[0] };

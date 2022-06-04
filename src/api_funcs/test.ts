@@ -2,9 +2,17 @@ import { Types } from "mongoose";
 import { ApiError } from "../utils/apiError";
 import { Answers } from "../utils/models/Answer";
 import { Modules } from "../utils/models/Module";
+import { ModuleAccounts } from "../utils/models/ModuleAccount";
 import { Questions } from "../utils/models/Question";
 import { Tests } from "../utils/models/Test";
 import { IAccount } from "./interfaces";
+
+// проверка на совпадение, если массив ответа пуст значит массивы совпадают (даже если порядок не правильный).
+const diff = function (a1: Array<any>, a2: Array<any>) {
+  return a1
+    .filter((i) => !a2.includes(i))
+    .concat(a2.filter((i) => !a1.includes(i)));
+};
 
 // интерфейс input старт тесты
 interface inputStartTest {
@@ -113,6 +121,7 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
 
   let questions: any[] = moduleCandidate[0].questions;
   let randQuestion = [];
+
   if (questions) {
     for (let i = 0; i < questions.length; i++) {
       const questionM = questions[i];
@@ -213,7 +222,6 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
   }
   // shuffle
   shuffle(randQuestion);
-
   // сохранение теста
   let test = new Tests();
   test._id = new Types.ObjectId();
@@ -322,9 +330,62 @@ const closeTest = async (account: IAccount, data: inputStopTest) => {
 
             // сохранение
             if (checkAnswer) {
-              testCandidate.questions[
-                index
-              ].answerAccountId = new Types.ObjectId(answer.accountAnswerId);
+              testCandidate.questions[index].answerAccountId =
+                new Types.ObjectId(answer.accountAnswerId);
+
+              // проверка правильности ответа
+              let question = await Questions.findOne({
+                _id: testCandidate.questions[index].questionId,
+              });
+              if (
+                question &&
+                question.correctAnswerId &&
+                question.correctAnswerId.toString() === answer.accountAnswerId
+              ) {
+                let moduleAccount = await ModuleAccounts.findOne({
+                  accountId: account._id,
+                  moduleId: testCandidate.moduleId,
+                });
+
+                if (moduleAccount) {
+                  if (moduleAccount.correctAnswers) {
+                    moduleAccount.correctAnswers.push(
+                      testCandidate.questions[index].questionId
+                    );
+                    await moduleAccount.save();
+                  } else {
+                    moduleAccount.correctAnswers = [];
+                    moduleAccount.correctAnswers.push(
+                      new Types.ObjectId(
+                        testCandidate.questions[index].questionId
+                      )
+                    );
+                    await moduleAccount.save();
+                  }
+                } else {
+                  let moduleAccount = await ModuleAccounts.create({
+                    accountId: account._id,
+                    moduleId: testCandidate.moduleId,
+                    progress: 0,
+                    correctAnswers: [],
+                  });
+
+                  if (moduleAccount.correctAnswers) {
+                    moduleAccount.correctAnswers.push(
+                      testCandidate.questions[index].questionId
+                    );
+                    await moduleAccount.save();
+                  } else {
+                    moduleAccount.correctAnswers = [];
+                    moduleAccount.correctAnswers.push(
+                      new Types.ObjectId(
+                        testCandidate.questions[index].questionId
+                      )
+                    );
+                    await moduleAccount.save();
+                  }
+                }
+              }
             }
           }
         } else if (answer.accountAnswerIds) {
@@ -356,6 +417,64 @@ const closeTest = async (account: IAccount, data: inputStopTest) => {
             }
           }
           testCandidate.questions[index].answerAccountIds = arrayAnswerId;
+          let candidateQuestion = await Questions.findOne({
+            _id: testCandidate.questions[index].questionId,
+          });
+
+          // проверка правильности ответа
+          let array1: string[] = [];
+          arrayAnswerId.forEach((id) => array1.push(id.toString()));
+
+          if (candidateQuestion && candidateQuestion.correctAnswerIds) {
+            let array2: string[] = [];
+            candidateQuestion.correctAnswerIds.forEach(id => array2.push(id.toString()));
+
+            if (diff(array1, array2).length === 0) {
+              let moduleAccount = await ModuleAccounts.findOne({
+                accountId: account._id,
+                moduleId: testCandidate.moduleId,
+              });
+
+              if (moduleAccount) {
+                if (moduleAccount.correctAnswers) {
+                  moduleAccount.correctAnswers.push(
+                    testCandidate.questions[index].questionId
+                  );
+                  await moduleAccount.save();
+                } else {
+                  moduleAccount.correctAnswers = [];
+                  moduleAccount.correctAnswers.push(
+                    new Types.ObjectId(
+                      testCandidate.questions[index].questionId
+                    )
+                  );
+                  await moduleAccount.save();
+                }
+              } else {
+                let moduleAccount = await ModuleAccounts.create({
+                  accountId: account._id,
+                  moduleId: testCandidate.moduleId,
+                  progress: 0,
+                  correctAnswers: [],
+                });
+
+                if (moduleAccount.correctAnswers) {
+                  moduleAccount.correctAnswers.push(
+                    testCandidate.questions[index].questionId
+                  );
+                  await moduleAccount.save();
+                } else {
+                  moduleAccount.correctAnswers = [];
+                  moduleAccount.correctAnswers.push(
+                    new Types.ObjectId(
+                      testCandidate.questions[index].questionId
+                    )
+                  );
+                  await moduleAccount.save();
+                }
+              }
+            }
+          }
         }
       }
     }

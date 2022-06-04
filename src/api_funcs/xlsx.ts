@@ -2,6 +2,7 @@ import fs, { ReadStream } from "fs";
 import { ApiError } from "../utils/apiError";
 import { IAccount } from "./interfaces";
 import { importTestNew, importModuleMap } from "../utils/xlsxTable";
+import { resolve } from "path";
 
 // интерфейс input загрузка заданий
 interface inputXlsxSetQuestion {
@@ -15,6 +16,7 @@ const instanceOfISXQ = (object: any): object is inputXlsxSetQuestion => {
 
 // api xlsx загрузка заданий
 const setQuestions = async (account: IAccount, data: inputXlsxSetQuestion) => {
+  console.log(data);
   // проверки
   if (!account.role.isAdminFun) {
     throw new ApiError(403, `Can't access this request`);
@@ -31,6 +33,7 @@ const setQuestions = async (account: IAccount, data: inputXlsxSetQuestion) => {
     let next_dir = data.xlsx.path;
     if (filename) {
       next_dir = `${global.GLOBAL_DIR}/tmp/${filename[2]}.xlsx`;
+
       fs.copyFileSync(data.xlsx.path, next_dir);
     }
 
@@ -55,7 +58,7 @@ const setModules = async (account: IAccount, data: inputXlsxSetQuestion) => {
     let filename = /^(.*)\/(\w+)\.xlsx$/.exec(data.xlsx.path);
     let next_dir = data.xlsx.path;
     if (filename) {
-      next_dir = `${global.GLOBAL_DIR}/tmp/${filename[2]}.xlsx`;
+      next_dir = `${resolve(__dirname, "../tmp")}/${filename[2]}.xlsx`;
       fs.copyFileSync(data.xlsx.path, next_dir);
     }
 

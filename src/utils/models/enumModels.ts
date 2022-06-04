@@ -9,5 +9,5 @@ export enum EModels {
   achievements = "achievements",
   achievementAccounts = "achievementaccounts",
   tests = "tests",
-  moduleAccounts = "ModuleAccounts",
+  moduleAccounts = "moduleaccounts",
 }

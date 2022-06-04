@@ -27,7 +27,7 @@ const NewSchema = new Schema<
   },
   moduleId: {
     type: Schema.Types.ObjectId,
-    default: null,
+    default: undefined,
     ref: EModels.modules,
   },
   achievementIds: [{ type: Schema.Types.ObjectId, ref: EModels.achievements }],
