@@ -66,8 +66,6 @@ export const importTestNew = async(
     const type = row.getCell(3).value as string;
     const theme = row.getCell(4).value as string;
     let lvl = row.getCell(5).value;
-    console.log(lvl);
-    
     if (lvl === null) {
       lvl = 1;
     }
