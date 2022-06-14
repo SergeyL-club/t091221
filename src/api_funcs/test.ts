@@ -217,6 +217,9 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
         _id: questionM.question._id,
         type: questionM.question.type,
         desc: questionM.question.desc,
+        descImg: questionM.question.descImg
+          ? questionM.question.descImg
+          : undefined,
         answers: answersArray,
       });
     }
