@@ -108,15 +108,17 @@ export const importTestNew = async(
             continue;
           let questionText = questionCell.value;
           const questionImage = getImage(questionCell.row, questionCell.col);
-
+          
+          
           let text = "";
           if (questionText && typeof (<any>questionText)["richText"] !== "undefined") {
-            Array((<any>questionText)["richText"]).forEach((el) => {
-              text += el.text;
+            (<any>questionText)["richText"].forEach((el: any) => {
+              text += el["text"];
             });
           }
-
-          if (text !== "") {
+          
+          console.log(questionText, text);
+          if (text !== "" && typeof text !== "undefined") {
             questionText = text;
           }
 
