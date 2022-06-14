@@ -106,14 +106,22 @@ export const importTestNew = async(
           const questionCell = row.getCell(i);
           if (!questionCell)
             continue;
-          const questionText = questionCell.value;
+          let questionText = questionCell.value;
           const questionImage = getImage(questionCell.row, questionCell.col);
 
-          console.log(questionText);
-          
+          let text = "";
+          if (questionText && typeof (<any>questionText)["richText"] !== "undefined") {
+            Array((<any>questionText)["richText"]).forEach((el) => {
+              text += el.text;
+            });
+          }
 
-          // Получаем правильный ответ и массив с неправильными
-          const answersCurrent = Array.from(answers);          
+          if (text !== "") {
+            questionText = text;
+          }
+
+            // Получаем правильный ответ и массив с неправильными
+            const answersCurrent = Array.from(answers);          
           const correctAnswer = answersCurrent[correctIndex];
           answersCurrent.splice(correctIndex, 1);
 
