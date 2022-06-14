@@ -255,7 +255,7 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
         _id: moduleCandidate[0]._id,
         name: moduleCandidate[0].name,
         testId: test._id,
-        questions: randQuestion,
+        questions: JSON.stringify(randQuestion),
       },
     };
   } else new ApiError(409, `Error in creeate test`);
