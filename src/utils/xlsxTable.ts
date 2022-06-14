@@ -212,10 +212,7 @@ export const importModuleMap = async (
   for (let i = 3; i < worksheet.rowCount; i++) {
     const row = worksheet.getRow(i);
 
-    let lvl = <any>row.getCell(1).value > 1 ? -1 : 0;
-    if (typeof lvl === "undefined") {
-      lvl = -1;
-    }
+    const lvl = <any>row.getCell(1).value > 1 ? -1 : 0;
     const parentKey = <any>row.getCell(2).value?.toString();
     const key = <any>row.getCell(4).value?.toString();
     const name = <any>row.getCell(5).value;

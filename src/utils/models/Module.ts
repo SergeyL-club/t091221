@@ -10,7 +10,7 @@ import { Users } from "./User";
 export interface IModule {
   name: string;
   desc: string;
-  lvl: number;
+  lvl?: number;
   childIds?: Array<Types.ObjectId>;
   questionIds?: Array<IQuestion>;
   accountWNA?: Array<Schema.Types.ObjectId>;
