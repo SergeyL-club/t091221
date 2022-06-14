@@ -223,7 +223,7 @@ const setAchievementAccount = async (
       if (candidate) {
         candidate.achievementIds.push(achievementCandidate._id);
         await candidate.save();
-        return { status: 200, block: candidate };
+        return { Ok: true, block: candidate };
       }
     } else {
       achievementCandidate.moduleIds.forEach(async (moduleId) => {
@@ -234,21 +234,59 @@ const setAchievementAccount = async (
         if (candidate && achievementCandidate) {
           candidate.achievementIds.push(achievementCandidate._id);
           await candidate.save();
-        } else if(achievementCandidate) {
+        } else if (achievementCandidate) {
           let block = await AchievementAccounts.create({
             accountId: new Types.ObjectId(data.accountId),
             moduleId: moduleId,
-            achievementIds: []
+            achievementIds: [],
           });
 
           block.achievementIds.push(achievementCandidate._id);
           await block.save();
         }
       });
-      return { status: 200 };
+      return { Ok: true };
     }
   }
   throw new ApiError(409, "Error connect achievement in account");
+};
+
+const remAchivementAccount = async (
+  account: IAccount,
+  data: inputSetAchievement
+) => {
+  if (!account.role.isAdminFun) {
+    throw new ApiError(403, `Can't access this request`);
+  }
+  if (
+    !data.accountId ||
+    !(await Users.findOne({ _id: new Types.ObjectId(data.accountId) }))
+  ) {
+    throw new ApiError(400, "account undefined");
+  }
+  if (
+    !data.achievementId ||
+    !(await Achievements.findOne({
+      _id: new Types.ObjectId(data.achievementId),
+    }))
+  ) {
+    throw new ApiError(400, "achievement undefined");
+  }
+
+  let candidatesAccount = await AchievementAccounts.find({
+    achievementIds: new Types.ObjectId(data.achievementId),
+  });
+
+  if (candidatesAccount.length > 0) {
+    candidatesAccount.forEach(async (candidate) => {
+      candidate.achievementIds = candidate.achievementIds.filter(
+        (id) => id.toString() !== data.achievementId
+      );
+      await candidate.save();
+    });
+
+    return { Ok: true };
+  }
 };
 
 // экспорт api функций
@@ -256,4 +294,5 @@ module.exports = {
   getAchievementModule,
   getAchievementAccount,
   setAchievementAccount,
+  remAchivementAccount
 };

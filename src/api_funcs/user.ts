@@ -384,6 +384,8 @@ interface generateStudentsReqItem {
   middleName: string;
   lastName: string;
   mail: string;
+  nickname: string;
+  password: string;
 }
 interface generateStudentsReq {
   classId: string;
@@ -438,11 +440,13 @@ const generateStudents = async (
     if (await Users.findOne({ mail: item.mail }))
       throw new ApiError(400, "Mail already used other user");
 
-    const nickname = generateBasedOn(
-      8,
-      item.mail.replace("@", "").replace(".", "")
-    );
-    const password = generatePassword();
+    // const nickname = generateBasedOn(
+    //   8,
+    //   item.mail.replace("@", "").replace(".", "")
+    // );
+    // const password = generatePassword();
+    const nickname = item.nickname;
+    const password = item.password;
 
     // Создаём в базе
     await Users.create({
