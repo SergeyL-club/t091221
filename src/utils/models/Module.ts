@@ -154,7 +154,7 @@ NewSchema.statics.conChild = async (
       await Modules.updateOne(
         { _id: new Types.ObjectId(childId) },
         {
-          lvl: parent.lvl + 1,
+          lvl: parent.lvl ? parent.lvl + 1 : 1,
         }
       );
       return true;
