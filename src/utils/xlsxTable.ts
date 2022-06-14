@@ -109,6 +109,9 @@ export const importTestNew = async(
           const questionText = questionCell.value;
           const questionImage = getImage(questionCell.row, questionCell.col);
 
+          console.log(questionText);
+          
+
           // Получаем правильный ответ и массив с неправильными
           const answersCurrent = Array.from(answers);          
           const correctAnswer = answersCurrent[correctIndex];

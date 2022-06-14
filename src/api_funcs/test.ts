@@ -255,7 +255,7 @@ const startTest = async (account: IAccount, data: inputStartTest) => {
         _id: moduleCandidate[0]._id,
         name: moduleCandidate[0].name,
         testId: test._id,
-        questions: JSON.stringify(randQuestion),
+        questions: randQuestion,
       },
     };
   } else new ApiError(409, `Error in creeate test`);
@@ -346,6 +346,7 @@ const closeTest = async (account: IAccount, data: inputStopTest) => {
                 question.correctAnswerId &&
                 question.correctAnswerId.toString() === answer.accountAnswerId
               ) {
+                testCandidate.questions[index].isCorrect = true;
                 let moduleAccount = await ModuleAccounts.findOne({
                   accountId: account._id,
                   moduleId: testCandidate.moduleId,
@@ -434,6 +435,7 @@ const closeTest = async (account: IAccount, data: inputStopTest) => {
             candidateQuestion.correctAnswerIds.forEach(id => array2.push(id.toString()));
 
             if (diff(array1, array2).length === 0) {
+              testCandidate.questions[index].isCorrect = true;
               let moduleAccount = await ModuleAccounts.findOne({
                 accountId: account._id,
                 moduleId: testCandidate.moduleId,

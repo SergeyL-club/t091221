@@ -17,6 +17,7 @@ interface IQuestionTest {
   answerIds: Array<Types.ObjectId>;
   answerAccountId?: Types.ObjectId;
   answerAccountIds?: Array<Types.ObjectId>;
+  isCorrect?: Boolean;
 }
 
 // расширенный тип
@@ -32,7 +33,8 @@ const QuestionSchema = new Schema<QuestionTestType, QuestionTestModel, QuestionT
   questionId: { type: Schema.Types.ObjectId, ref: EModels.questions },
   answerIds: [{ type: Schema.Types.ObjectId, ref: EModels.answers }],
   answerAccountId: { type: Schema.Types.ObjectId, ref: EModels.answers, default: undefined },
-  answerAccountIds: [{ type: Schema.Types.ObjectId, ref: EModels.answers, default: undefined }]
+  answerAccountIds: [{ type: Schema.Types.ObjectId, ref: EModels.answers, default: undefined }],
+  isCorrect: { type: Boolean, default: false }
 }, { _id: false });
 
 // схема
