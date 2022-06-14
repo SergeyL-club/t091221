@@ -65,7 +65,12 @@ export const importTestNew = async(
 
     const type = row.getCell(3).value as string;
     const theme = row.getCell(4).value as string;
-    const lvl = row.getCell(5).value;
+    let lvl = row.getCell(5).value;
+    console.log(lvl);
+    
+    if (lvl === null) {
+      lvl = 1;
+    }
     const isMilestone = (row.getCell(9).value == "1") ? true : false;
     const descCell = row.getCell(11);
     const desc = descCell.value ?? "";
