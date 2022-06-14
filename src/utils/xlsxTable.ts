@@ -103,7 +103,7 @@ export const importTestNew = async(
         // Перебираем все вопросы
         for (let i = questionStartIndex; i < 20; i+=2) {
           // Получаем вопрос или пропускам
-          const questionCell = row.getCell(i+1);
+          const questionCell = row.getCell(i);
           if (!questionCell)
             continue;
           const questionText = questionCell.value;
